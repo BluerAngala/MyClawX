@@ -386,28 +386,6 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
               </CardContent>
             </Card>
           ))}
-
-          <Card className="border-dashed opacity-60">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <span className="text-4xl">🛒</span>
-                <Badge variant="outline">即将推出</Badge>
-              </div>
-              <CardTitle className="mt-2">电商运营</CardTitle>
-              <CardDescription>商品优化、客服自动化、数据分析</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-dashed opacity-60">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <span className="text-4xl">⚖️</span>
-                <Badge variant="outline">即将推出</Badge>
-              </div>
-              <CardTitle className="mt-2">律师/法务</CardTitle>
-              <CardDescription>合同审查、法律研究、文书起草</CardDescription>
-            </CardHeader>
-          </Card>
         </div>
       ) : !selectedScene ? (
         <div className="space-y-4">

@@ -1,10 +1,11 @@
 {
-    "sidebar": {
+"sidebar": {
         "chat": "Chat",
         "newChat": "New Chat",
         "cronTasks": "Cron Tasks",
-        "skills": "Skills",
-        "channels": "Channels",
+        "skills": "Skills Config",
+        "channels": "Integrations",
+        "professions": "Professions",
         "dashboard": "Dashboard",
         "settings": "Settings",
         "devConsole": "Developer Console"

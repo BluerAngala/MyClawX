@@ -14,12 +14,12 @@ import {
   Download,
   Copy,
   FileText,
+  Server,
+  Settings2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -28,8 +28,10 @@ import { useGatewayStore } from '@/stores/gateway';
 import { useUpdateStore } from '@/stores/update';
 import { ProvidersSettings } from '@/components/settings/ProvidersSettings';
 import { UpdateSettings } from '@/components/settings/UpdateSettings';
+import { AccordionItem } from '@/components/ui/accordion';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@/i18n';
+
 type ControlUiInfo = {
   url: string;
   token: string;
@@ -106,7 +108,6 @@ export function Settings() {
     }
   };
 
-  // Open developer console
   const openDevConsole = async () => {
     try {
       const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl') as {
@@ -260,21 +261,21 @@ export function Settings() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
+    <div className="space-y-4 p-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground">
           {t('subtitle')}
         </p>
       </div>
 
-      {/* Appearance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('appearance.title')}</CardTitle>
-          <CardDescription>{t('appearance.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <AccordionItem
+        icon={<Sun className="h-5 w-5" />}
+        title={t('appearance.title')}
+        description={t('appearance.description')}
+        defaultOpen
+      >
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label>{t('appearance.theme')}</Label>
             <div className="flex gap-2">
@@ -319,210 +320,25 @@ export function Settings() {
               ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionItem>
 
-      {/* AI Providers */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Key className="h-5 w-5" />
-            {t('aiProviders.title')}
-          </CardTitle>
-          <CardDescription>{t('aiProviders.description')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProvidersSettings />
-        </CardContent>
-      </Card>
+      <AccordionItem
+        icon={<Key className="h-5 w-5" />}
+        title={t('aiProviders.title')}
+        description={t('aiProviders.description')}
+        defaultOpen
+      >
+        <ProvidersSettings />
+      </AccordionItem>
 
-      {/* Gateway */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('gateway.title')}</CardTitle>
-          <CardDescription>{t('gateway.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('gateway.status')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('gateway.port')}: {gatewayStatus.port}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant={
-                  gatewayStatus.state === 'running'
-                    ? 'success'
-                    : gatewayStatus.state === 'error'
-                      ? 'destructive'
-                      : 'secondary'
-                }
-              >
-                {gatewayStatus.state}
-              </Badge>
-              <Button variant="outline" size="sm" onClick={restartGateway}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                {t('common:actions.restart')}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleShowLogs}>
-                <FileText className="h-4 w-4 mr-2" />
-                {t('gateway.logs')}
-              </Button>
-            </div>
-          </div>
-
-          {showLogs && (
-            <div className="mt-4 p-4 rounded-lg bg-black/10 dark:bg-black/40 border border-border">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium text-sm">{t('gateway.appLogs')}</p>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleOpenLogDir}>
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    {t('gateway.openFolder')}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowLogs(false)}>
-                    {t('common:actions.close')}
-                  </Button>
-                </div>
-              </div>
-              <pre className="text-xs text-muted-foreground bg-background/50 p-3 rounded max-h-60 overflow-auto whitespace-pre-wrap font-mono">
-                {logContent || t('chat:noLogs')}
-              </pre>
-            </div>
-          )}
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('gateway.autoStart')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('gateway.autoStartDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={gatewayAutoStart}
-              onCheckedChange={setGatewayAutoStart}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label>{t('gateway.proxyTitle')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t('gateway.proxyDesc')}
-                </p>
-              </div>
-              <Switch
-                checked={proxyEnabledDraft}
-                onCheckedChange={setProxyEnabledDraft}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="proxy-server">{t('gateway.proxyServer')}</Label>
-              <Input
-                id="proxy-server"
-                value={proxyServerDraft}
-                onChange={(event) => setProxyServerDraft(event.target.value)}
-                placeholder="http://127.0.0.1:7890"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('gateway.proxyServerHelp')}
-              </p>
-            </div>
-
-            {devModeUnlocked && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="proxy-http-server">{t('gateway.proxyHttpServer')}</Label>
-                  <Input
-                    id="proxy-http-server"
-                    value={proxyHttpServerDraft}
-                    onChange={(event) => setProxyHttpServerDraft(event.target.value)}
-                    placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t('gateway.proxyHttpServerHelp')}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="proxy-https-server">{t('gateway.proxyHttpsServer')}</Label>
-                  <Input
-                    id="proxy-https-server"
-                    value={proxyHttpsServerDraft}
-                    onChange={(event) => setProxyHttpsServerDraft(event.target.value)}
-                    placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t('gateway.proxyHttpsServerHelp')}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="proxy-all-server">{t('gateway.proxyAllServer')}</Label>
-                  <Input
-                    id="proxy-all-server"
-                    value={proxyAllServerDraft}
-                    onChange={(event) => setProxyAllServerDraft(event.target.value)}
-                    placeholder={proxyServerDraft || 'socks5://127.0.0.1:7891'}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t('gateway.proxyAllServerHelp')}
-                  </p>
-                </div>
-              </>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="proxy-bypass">{t('gateway.proxyBypass')}</Label>
-              <Input
-                id="proxy-bypass"
-                value={proxyBypassRulesDraft}
-                onChange={(event) => setProxyBypassRulesDraft(event.target.value)}
-                placeholder="<local>;localhost;127.0.0.1;::1"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t('gateway.proxyBypassHelp')}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3">
-              <p className="text-sm text-muted-foreground">
-                {t('gateway.proxyRestartNote')}
-              </p>
-              <Button
-                variant="outline"
-                onClick={handleSaveProxySettings}
-                disabled={savingProxy}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2${savingProxy ? ' animate-spin' : ''}`} />
-                {savingProxy ? t('common:status.saving') : t('common:actions.save')}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Updates */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            {t('updates.title')}
-          </CardTitle>
-          <CardDescription>{t('updates.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <AccordionItem
+        icon={<Download className="h-5 w-5" />}
+        title={t('updates.title')}
+        description={t('updates.description')}
+      >
+        <div className="space-y-4">
           <UpdateSettings />
-
-          <Separator />
 
           <div className="flex items-center justify-between">
             <div>
@@ -552,16 +368,184 @@ export function Settings() {
               }}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionItem>
 
-      {/* Advanced */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('advanced.title')}</CardTitle>
-          <CardDescription>{t('advanced.description')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <AccordionItem
+        icon={<Settings2 className="h-5 w-5" />}
+        title={t('advanced.title')}
+        description={t('advanced.description')}
+      >
+        <div className="space-y-4">
+          {/* Gateway status section */}
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium flex items-center gap-2">
+                <Server className="h-4 w-4" />
+                {t('gateway.title')}
+              </h4>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={
+                    gatewayStatus.state === 'running'
+                      ? 'success'
+                      : gatewayStatus.state === 'error'
+                        ? 'destructive'
+                        : 'secondary'
+                  }
+                >
+                  {gatewayStatus.state}
+                </Badge>
+                <Button variant="outline" size="sm" onClick={restartGateway}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t('common:actions.restart')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleShowLogs}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  {t('gateway.logs')}
+                </Button>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2">
+              {t('gateway.port')}: {gatewayStatus.port}
+            </p>
+
+            {showLogs && (
+              <div className="mt-4 p-4 rounded-lg bg-black/10 dark:bg-black/40 border border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-medium text-sm">{t('gateway.appLogs')}</p>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleOpenLogDir}>
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      {t('gateway.openFolder')}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowLogs(false)}>
+                      {t('common:actions.close')}
+                    </Button>
+                  </div>
+                </div>
+                <pre className="text-xs text-muted-foreground bg-background/50 p-3 rounded max-h-60 overflow-auto whitespace-pre-wrap font-mono">
+                  {logContent || t('chat:noLogs')}
+                </pre>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>{t('gateway.autoStart')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('gateway.autoStartDesc')}
+              </p>
+            </div>
+            <Switch
+              checked={gatewayAutoStart}
+              onCheckedChange={setGatewayAutoStart}
+            />
+          </div>
+
+          {/* Proxy settings */}
+          <div className="rounded-lg border p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <Label>{t('gateway.proxyTitle')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('gateway.proxyDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={proxyEnabledDraft}
+                onCheckedChange={setProxyEnabledDraft}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="proxy-server">{t('gateway.proxyServer')}</Label>
+                <Input
+                  id="proxy-server"
+                  value={proxyServerDraft}
+                  onChange={(event) => setProxyServerDraft(event.target.value)}
+                  placeholder="http://127.0.0.1:7890"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('gateway.proxyServerHelp')}
+                </p>
+              </div>
+
+              {devModeUnlocked && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="proxy-http-server">{t('gateway.proxyHttpServer')}</Label>
+                    <Input
+                      id="proxy-http-server"
+                      value={proxyHttpServerDraft}
+                      onChange={(event) => setProxyHttpServerDraft(event.target.value)}
+                      placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('gateway.proxyHttpServerHelp')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="proxy-https-server">{t('gateway.proxyHttpsServer')}</Label>
+                    <Input
+                      id="proxy-https-server"
+                      value={proxyHttpsServerDraft}
+                      onChange={(event) => setProxyHttpsServerDraft(event.target.value)}
+                      placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('gateway.proxyHttpsServerHelp')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="proxy-all-server">{t('gateway.proxyAllServer')}</Label>
+                    <Input
+                      id="proxy-all-server"
+                      value={proxyAllServerDraft}
+                      onChange={(event) => setProxyAllServerDraft(event.target.value)}
+                      placeholder={proxyServerDraft || 'socks5://127.0.0.1:7891'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t('gateway.proxyAllServerHelp')}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="proxy-bypass">{t('gateway.proxyBypass')}</Label>
+                <Input
+                  id="proxy-bypass"
+                  value={proxyBypassRulesDraft}
+                  onChange={(event) => setProxyBypassRulesDraft(event.target.value)}
+                  placeholder="<local>;localhost;127.0.0.1;::1"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {t('gateway.proxyBypassHelp')}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3">
+                <p className="text-sm text-muted-foreground">
+                  {t('gateway.proxyRestartNote')}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveProxySettings}
+                  disabled={savingProxy}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2${savingProxy ? ' animate-spin' : ''}`} />
+                  {savingProxy ? t('common:status.saving') : t('common:actions.save')}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Dev mode toggle */}
           <div className="flex items-center justify-between">
             <div>
               <Label>{t('advanced.devMode')}</Label>
@@ -574,17 +558,17 @@ export function Settings() {
               onCheckedChange={setDevModeUnlocked}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionItem>
 
-      {/* Developer */}
+      {/* Developer tools - only shown when dev mode is unlocked */}
       {devModeUnlocked && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('developer.title')}</CardTitle>
-            <CardDescription>{t('developer.description')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <AccordionItem
+          icon={<Terminal className="h-5 w-5" />}
+          title={t('developer.title')}
+          description={t('developer.description')}
+        >
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label>{t('developer.console')}</Label>
               <p className="text-sm text-muted-foreground">
@@ -598,82 +582,80 @@ export function Settings() {
               <p className="text-xs text-muted-foreground">
                 {t('developer.consoleNote')}
               </p>
-              <div className="space-y-2 pt-2">
-                <Label>{t('developer.gatewayToken')}</Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('developer.gatewayToken')}</Label>
+              <p className="text-sm text-muted-foreground">
+                {t('developer.gatewayTokenDesc')}
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={controlUiInfo?.token || ''}
+                  placeholder={t('developer.tokenUnavailable')}
+                  className="font-mono"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={refreshControlUiInfo}
+                  disabled={!devModeUnlocked}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  {t('common:actions.load')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyGatewayToken}
+                  disabled={!controlUiInfo?.token}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  {t('common:actions.copy')}
+                </Button>
+              </div>
+            </div>
+
+            {showCliTools && (
+              <div className="space-y-2">
+                <Label>{t('developer.cli')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  {t('developer.gatewayTokenDesc')}
+                  {t('developer.cliDesc')}
                 </p>
+                {isWindows && (
+                  <p className="text-xs text-muted-foreground">
+                    {t('developer.cliPowershell')}
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <Input
                     readOnly
-                    value={controlUiInfo?.token || ''}
-                    placeholder={t('developer.tokenUnavailable')}
+                    value={openclawCliCommand}
+                    placeholder={openclawCliError || t('developer.cmdUnavailable')}
                     className="font-mono"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={refreshControlUiInfo}
-                    disabled={!devModeUnlocked}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    {t('common:actions.load')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCopyGatewayToken}
-                    disabled={!controlUiInfo?.token}
+                    onClick={handleCopyCliCommand}
+                    disabled={!openclawCliCommand}
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     {t('common:actions.copy')}
                   </Button>
                 </div>
               </div>
-            </div>
-            {showCliTools && (
-              <>
-                <Separator />
-                <div className="space-y-2">
-                  <Label>{t('developer.cli')}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('developer.cliDesc')}
-                  </p>
-                  {isWindows && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('developer.cliPowershell')}
-                    </p>
-                  )}
-                  <div className="flex gap-2">
-                    <Input
-                      readOnly
-                      value={openclawCliCommand}
-                      placeholder={openclawCliError || t('developer.cmdUnavailable')}
-                      className="font-mono"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCopyCliCommand}
-                      disabled={!openclawCliCommand}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      {t('common:actions.copy')}
-                    </Button>
-                  </div>
-                </div>
-              </>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </AccordionItem>
       )}
 
-      {/* About */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('about.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
+      {/* About section */}
+      <AccordionItem
+        title={t('about.title')}
+      >
+        <div className="space-y-2 text-sm text-muted-foreground">
           <p>
             <strong>{t('about.appName')}</strong> - {t('about.tagline')}
           </p>
@@ -695,8 +677,8 @@ export function Settings() {
               {t('about.github')}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </AccordionItem>
     </div>
   );
 }

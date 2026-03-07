@@ -1,22 +1,22 @@
 {
-    "title": "消息频道",
-    "subtitle": "管理您的消息频道和连接",
+    "title": "外挂渠道",
+    "subtitle": "管理您的外挂渠道和连接",
     "refresh": "刷新",
-    "addChannel": "添加频道",
+    "addChannel": "添加渠道",
     "stats": {
-        "total": "频道总数",
+        "total": "渠道总数",
         "connected": "已连接",
         "disconnected": "未连接"
     },
-    "gatewayWarning": "网关服务未运行，频道无法连接。",
-    "available": "可用频道",
-    "availableDesc": "连接一个新的频道",
+    "gatewayWarning": "网关服务未运行，渠道无法连接。",
+    "available": "可用渠道",
+    "availableDesc": "连接一个新的渠道",
     "showAll": "显示全部",
     "pluginBadge": "插件",
     "toast": {
         "whatsappConnected": "WhatsApp 连接成功",
         "whatsappFailed": "WhatsApp 连接失败: {{error}}",
-        "channelSaved": "频道 {{name}} 已保存",
+        "channelSaved": "渠道 {{name}} 已保存",
         "channelConnecting": "正在连接 {{name}}...",
         "restartManual": "请手动重启网关",
         "configFailed": "配置失败: {{error}}"
@@ -24,18 +24,18 @@
     "dialog": {
         "updateTitle": "更新 {{name}}",
         "configureTitle": "配置 {{name}}",
-        "addTitle": "添加频道",
+        "addTitle": "添加渠道",
         "existingDesc": "更新您现有的配置",
-        "selectDesc": "选择要配置的频道类型",
+        "selectDesc": "选择要配置的渠道类型",
         "qrCode": "二维码",
         "token": "令牌",
         "scanQR": "使用 {{name}} 扫描此二维码",
         "refreshCode": "刷新代码",
         "loadingConfig": "正在加载配置...",
-        "existingHint": "您已配置过此频道",
+        "existingHint": "您已配置过此渠道",
         "howToConnect": "如何连接",
         "viewDocs": "查看文档",
-        "channelName": "频道名称",
+        "channelName": "渠道名称",
         "channelNamePlaceholder": "我的 {{name}}",
         "credentialsVerified": "凭证已验证",
         "validationFailed": "验证失败",
@@ -222,18 +222,18 @@
             "docsUrl": "https://docs.openclaw.ai/channels/line",
             "fields": {
                 "channelAccessToken": {
-                    "label": "频道访问令牌",
-                    "placeholder": "您的 LINE 频道访问令牌"
+                    "label": "渠道访问令牌",
+                    "placeholder": "您的 LINE 渠道访问令牌"
                 },
                 "channelSecret": {
-                    "label": "频道密钥",
-                    "placeholder": "您的 LINE 频道密钥"
+                    "label": "渠道密钥",
+                    "placeholder": "您的 LINE 渠道密钥"
                 }
             },
             "instructions": [
                 "前往 LINE 开发者控制台",
-                "创建一个 Messaging API 频道",
-                "获取频道访问令牌和密钥"
+                "创建一个 Messaging API 渠道",
+                "获取渠道访问令牌和密钥"
             ]
         },
         "msteams": {
@@ -253,7 +253,7 @@
                 "前往 Azure 门户",
                 "注册一个新的 Bot 应用",
                 "获取应用 ID 并创建密码",
-                "配置 Teams 频道"
+                "配置 Teams 渠道"
             ]
         },
         "googlechat": {

@@ -134,6 +134,12 @@ const electronAPI = {
         'openclaw:getConfigDir',
         'openclaw:getSkillsDir',
         'openclaw:getCliCommand',
+        // Profession presets
+        'profession:getAll',
+        'profession:get',
+        'profession:getUserConfig',
+        'profession:applyScene',
+        'profession:clear',
       ];
 
       if (validChannels.includes(channel)) {
@@ -172,6 +178,8 @@ const electronAPI = {
         'oauth:success',
         'oauth:error',
         'openclaw:cli-installed',
+        'profession:auto-skill',
+        'profession:auto-cron',
       ];
 
       if (validChannels.includes(channel)) {
@@ -214,6 +222,8 @@ const electronAPI = {
         'oauth:code',
         'oauth:success',
         'oauth:error',
+        'profession:auto-skill',
+        'profession:auto-cron',
       ];
 
       if (validChannels.includes(channel)) {

@@ -17,6 +17,7 @@ import {
   Terminal,
   ExternalLink,
   Trash2,
+  Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
@@ -108,11 +109,15 @@ export function Sidebar() {
   const { t } = useTranslation();
   const [sessionToDelete, setSessionToDelete] = useState<{ key: string; label: string } | null>(null);
 
-  const navItems = [
-    { to: '/cron', icon: <Clock className="h-5 w-5" />, label: t('sidebar.cronTasks') },
+const navItems = [
+    { to: '/dashboard', icon: <Home className="h-5 w-5" />, label: t('sidebar.dashboard') },
+  ];
+
+  const navItemsAfterChat = [
+    { to: '/professions', icon: <Briefcase className="h-5 w-5" />, label: t('sidebar.professions') },
     { to: '/skills', icon: <Puzzle className="h-5 w-5" />, label: t('sidebar.skills') },
     { to: '/channels', icon: <Radio className="h-5 w-5" />, label: t('sidebar.channels') },
-    { to: '/dashboard', icon: <Home className="h-5 w-5" />, label: t('sidebar.dashboard') },
+    { to: '/cron', icon: <Clock className="h-5 w-5" />, label: t('sidebar.cronTasks') },
     { to: '/settings', icon: <Settings className="h-5 w-5" />, label: t('sidebar.settings') },
   ];
 
@@ -123,8 +128,16 @@ export function Sidebar() {
         sidebarCollapsed ? 'w-16' : 'w-64'
       )}
     >
-      {/* Navigation */}
+{/* Navigation */}
       <nav className="flex-1 overflow-hidden flex flex-col p-2 gap-1">
+        {navItems.map((item) => (
+          <NavItem
+            key={item.to}
+            {...item}
+            collapsed={sidebarCollapsed}
+          />
+        ))}
+
         {/* Chat nav item: acts as "New Chat" button, never highlighted as active */}
         <button
           onClick={() => {
@@ -142,7 +155,7 @@ export function Sidebar() {
           {!sidebarCollapsed && <span className="flex-1 text-left">{t('sidebar.newChat')}</span>}
         </button>
 
-        {navItems.map((item) => (
+        {navItemsAfterChat.map((item) => (
           <NavItem
             key={item.to}
             {...item}

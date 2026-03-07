@@ -119,6 +119,17 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
               <p className="text-muted-foreground">加载中...</p>
             </div>
           </div>
+        ) : professions.length === 0 ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                暂未检测到任何职业预设配置。
+              </p>
+              <p className="text-xs text-muted-foreground">
+                请确认应用安装包中包含 <code>resources/professions/*.json</code>，或稍后通过更新版本获取。
+              </p>
+            </div>
+          </div>
         ) : (
           <>
             {/* Step 1: Select Profession */}
@@ -158,51 +169,6 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                     </CardContent>
                   </Card>
                 ))}
-
-                {/* Coming Soon Card */}
-                <Card className="border-dashed opacity-60">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <span className="text-4xl">🛒</span>
-                      <Badge variant="outline">即将推出</Badge>
-                    </div>
-                    <CardTitle className="mt-2">电商运营</CardTitle>
-                    <CardDescription>商品优化、客服自动化、数据分析</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>15分钟设置</span>
-                      </div>
-                    </div>
-                    <Button className="mt-4 w-full" variant="outline" disabled>
-                      敬请期待
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-dashed opacity-60">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <span className="text-4xl">⚖️</span>
-                      <Badge variant="outline">即将推出</Badge>
-                    </div>
-                    <CardTitle className="mt-2">律师/法务</CardTitle>
-                    <CardDescription>合同审查、法律研究、文书起草</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>20分钟设置</span>
-                      </div>
-                    </div>
-                    <Button className="mt-4 w-full" variant="outline" disabled>
-                      敬请期待
-                    </Button>
-                  </CardContent>
-                </Card>
               </div>
             )}
 

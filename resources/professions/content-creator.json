@@ -50,6 +50,74 @@
           "content": "请创作一篇小红书风格的生活分享文案：\n\n分享主题：{{topic}}\n关键要点：{{keyPoints}}\n\n要求：\n1. 标题有吸引力，带emoji\n2. 内容结构清晰，分段明确\n3. 语言亲切自然，有画面感\n4. 适当使用小红书流行语\n5. 结尾有互动引导\n6. 添加相关热门标签\n\n输出格式：\n📌 标题：\n\n📝 正文：\n\n🏷️ 推荐标签："
         }
       ]
+    },
+    {
+      "id": "douyin-script",
+      "name": "Short Video Script",
+      "nameZh": "短视频脚本生成（抖音等）",
+      "description": "Generate hook-driven short video scripts with shooting notes",
+      "descriptionZh": "面向抖音/快手/视频号的短视频脚本与镜头拆分",
+      "icon": "🎬",
+      "useCasesZh": [
+        "根据产品或选题生成 15-60 秒短视频脚本",
+        "自动拆分镜头、旁白、字幕与画面提示",
+        "为同一主题生成多个不同开头 hook 版本做 A/B 测试"
+      ],
+      "skills": [
+        {
+          "slug": "web-browse",
+          "required": false,
+          "description": "按需查看平台热门话题与视频案例"
+        },
+        {
+          "slug": "summarize",
+          "required": true,
+          "description": "提炼卖点并结构化输出脚本"
+        }
+      ],
+      "promptTemplates": [
+        {
+          "id": "douyin-product-script",
+          "name": "Product Short Video",
+          "nameZh": "产品种草短视频脚本",
+          "category": "video",
+          "content": "请为以下产品生成一条适合抖音/视频号的短视频脚本：\n\n产品/主题：{{topic}}\n核心卖点：{{selling_points}}\n目标受众：{{audience}}\n预期时长（秒）：{{duration}}\n\n要求：\n1. 给出 3 个不同方向的开头 hook 备选（每个 3-5 秒）\n2. 按“镜头编号 -> 画面 -> 旁白/台词 -> 时长预估”结构输出\n3. 语言风格贴近平台真实口语，适当使用网络表达但避免夸大宣传\n4. 预留字幕文案与屏幕文字提示\n5. 结尾包含点赞/关注/私信等行动引导\n\n请按如下格式输出：\n- 开头 Hook 备选\n- 脚本明细（镜头 1、镜头 2...）\n- 建议配乐/氛围说明（可选）"
+        }
+      ]
+    },
+    {
+      "id": "multi-platform-repurpose",
+      "name": "Content Repurposing",
+      "nameZh": "多平台内容改写分发",
+      "description": "Repurpose one long-form content piece into multiple platform-specific posts",
+      "descriptionZh": "将一份长内容拆分改写为公众号、小红书、微博等多平台版本",
+      "icon": "🔁",
+      "useCasesZh": [
+        "把一篇长篇文章改写为公众号长文 + 小红书图文 + 微博碎片内容",
+        "从直播或访谈文字整理出多条社媒选题与文案",
+        "统一规划一周内容排期并输出待发文案清单"
+      ],
+      "skills": [
+        {
+          "slug": "summarize",
+          "required": true,
+          "description": "从长内容中抽取结构与要点"
+        },
+        {
+          "slug": "web-browse",
+          "required": false,
+          "description": "按需参考各平台风格与热门话题"
+        }
+      ],
+      "promptTemplates": [
+        {
+          "id": "repurpose-longform",
+          "name": "Repurpose Long Article",
+          "nameZh": "长文多平台改写",
+          "category": "distribution",
+          "content": "以下是一份长内容，请帮我改写并拆分成多平台可直接发布的内容：\n\n原文类型：{{source_type}}\n原文内容：{{source_content}}\n目标平台：公众号、小红书、微博（可按需增减）\n\n请按如下结构输出：\n1. 公众号：\n   - 标题（3 个备选）\n   - 摘要（用于封面/摘要）\n   - 正文结构（分节标题 + 每节要点小结）\n2. 小红书：\n   - 标题（3 个备选，带 emoji）\n   - 正文（适配图文笔记风格，保留换行和表情）\n   - 推荐标签（不少于 8 个，带#）\n3. 微博：\n   - 可直接发送的短文案 3-5 条（适合多次发布），每条不超过限制字数\n\n整体要求：\n- 各平台文案风格需贴近真实用户表达，而不是硬广\n- 保持核心观点一致，但表达方式和节奏适配对应平台"
+        }
+      ]
     }
   ]
 }

@@ -5,7 +5,7 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { Component, useEffect } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import i18n from './i18n';
 import { MainLayout } from './components/layout/MainLayout';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -15,9 +15,12 @@ import { Channels } from './pages/Channels';
 import { Skills } from './pages/Skills';
 import { Cron } from './pages/Cron';
 import { Settings } from './pages/Settings';
+import ProfessionsPage from './pages/Professions';
 import { Setup } from './pages/Setup';
 import { useSettingsStore } from './stores/settings';
 import { useGatewayStore } from './stores/gateway';
+import { useSkillsStore } from './stores/skills';
+import { useCronStore } from './stores/cron';
 
 
 /**
@@ -134,6 +137,94 @@ function App() {
     };
   }, [navigate]);
 
+  // Auto-setup hooks for profession scenes:
+  // - 安装并启用场景所需技能
+  // - 创建示例定时任务
+  useEffect(() => {
+    const offSkill = window.electron.ipcRenderer.on('profession:auto-skill', async (payload) => {
+      try {
+        if (!payload || typeof payload !== 'object') return;
+        const slug = (payload as { slug?: string }).slug;
+        if (!slug) return;
+
+        const skillsState = useSkillsStore.getState();
+        const existing =
+          skillsState.skills.find((s) => s.slug === slug) ||
+          skillsState.skills.find((s) => s.id === slug);
+
+        // 已存在且已启用则直接跳过
+        if (existing && existing.enabled) {
+          return;
+        }
+
+        // 已存在但未启用：只启用
+        if (existing && !existing.enabled) {
+          await skillsState.enableSkill(existing.id);
+          toast.success(`已为当前场景启用技能：${existing.name || slug}`);
+          return;
+        }
+
+        // 不存在：尝试通过 ClawHub 安装后再启用
+        await skillsState.installSkill(slug);
+
+        // 安装完成后，从最新状态中查找并启用
+        const afterInstall = useSkillsStore.getState();
+        const installed =
+          afterInstall.skills.find((s) => s.slug === slug) ||
+          afterInstall.skills.find((s) => s.id === slug);
+
+        if (installed) {
+          await afterInstall.enableSkill(installed.id);
+          toast.success(`已为当前场景安装并启用技能：${installed.name || slug}`);
+        }
+      } catch (err) {
+        console.error('Failed to auto-install/enable scene skill:', err);
+        toast.error('自动安装场景所需技能失败，请在“技能”页面手动检查。');
+      }
+    });
+
+    const offCron = window.electron.ipcRenderer.on('profession:auto-cron', async (payload) => {
+      try {
+        if (!payload || typeof payload !== 'object') return;
+        const { name, message, schedule } = payload as {
+          name?: string;
+          message?: string;
+          schedule?: string;
+        };
+        if (!name || !message || !schedule) return;
+
+        const cronState = useCronStore.getState();
+
+        // 避免重复创建同名任务（按名称粗略去重）
+        const exists = cronState.jobs.some((job) => job.name === name);
+        if (exists) {
+          return;
+        }
+
+        await cronState.createJob({
+          name,
+          message,
+          schedule,
+          enabled: true,
+        });
+
+        toast.success(`已为当前场景创建示例定时任务：${name}`);
+      } catch (err) {
+        console.error('Failed to auto-create cron job for scene:', err);
+        toast.error('自动创建场景示例定时任务失败，请在“定时任务”页面手动检查。');
+      }
+    });
+
+    return () => {
+      if (typeof offSkill === 'function') {
+        offSkill();
+      }
+      if (typeof offCron === 'function') {
+        offCron();
+      }
+    };
+  }, []);
+
   // Apply theme
   useEffect(() => {
     const root = window.document.documentElement;
@@ -163,6 +254,7 @@ function App() {
             <Route path="/channels" element={<Channels />} />
             <Route path="/skills" element={<Skills />} />
             <Route path="/cron" element={<Cron />} />
+            <Route path="/professions" element={<ProfessionsPage showSkip={false} />} />
             <Route path="/settings/*" element={<Settings />} />
           </Route>
         </Routes>

@@ -55,6 +55,8 @@ export interface AppSettings {
   // Profession presets
   activeProfession?: string;
   professionConfig?: unknown;
+  // Custom profession presets (user-defined professions/scenes)
+  professionCustomPresets?: unknown;
 }
 
 /**
@@ -96,6 +98,7 @@ const defaults: AppSettings = {
   // Profession presets
   activeProfession: undefined,
   professionConfig: undefined,
+  professionCustomPresets: undefined,
 };
 
 /**
