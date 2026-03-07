@@ -1,0 +1,55 @@
+{
+  "id": "content-creator",
+  "name": "Content Creator",
+  "nameZh": "自媒体创作者",
+  "description": "Automated content creation and social media publishing",
+  "descriptionZh": "自动化内容创作和社交媒体发布",
+  "icon": "✍️",
+  "color": "rose",
+  "difficulty": "beginner",
+  "estimatedSetupTime": 5,
+  "commonSkills": ["web-browse", "summarize"],
+  "scenes": [
+    {
+      "id": "xiaohongshu-writer",
+      "name": "Xiaohongshu Writer",
+      "nameZh": "小红书文案生成",
+      "description": "Generate Xiaohongshu-style content with proper formatting and tags",
+      "descriptionZh": "生成小红书风格的文案，包含合适的格式和标签",
+      "icon": "📕",
+      "useCasesZh": [
+        "输入产品或主题，自动生成小红书文案",
+        "智能推荐热门标签和话题",
+        "一键复制到小红书发布"
+      ],
+      "skills": [
+        {
+          "slug": "web-browse",
+          "required": true,
+          "description": "搜索热门话题和趋势"
+        },
+        {
+          "slug": "summarize",
+          "required": true,
+          "description": "整理和优化文案内容"
+        }
+      ],
+      "promptTemplates": [
+        {
+          "id": "xiaohongshu-product",
+          "name": "Product Review",
+          "nameZh": "小红书种草文案",
+          "category": "social",
+          "content": "请为以下产品/主题创作一篇小红书风格的种草文案：\n\n主题：{{topic}}\n产品特点：{{features}}\n目标人群：{{audience}}\n\n要求：\n1. 标题要吸引人，使用emoji\n2. 开头要有痛点或场景引入\n3. 内容真实自然，像朋友推荐\n4. 使用小红书常用语气和表达\n5. 结尾引导互动（点赞/收藏/评论）\n6. 推荐5-8个相关热门标签\n\n格式：\n标题：\n正文：\n标签："
+        },
+        {
+          "id": "xiaohongshu-lifestyle",
+          "name": "Lifestyle Share",
+          "nameZh": "小红书生活分享",
+          "category": "social",
+          "content": "请创作一篇小红书风格的生活分享文案：\n\n分享主题：{{topic}}\n关键要点：{{keyPoints}}\n\n要求：\n1. 标题有吸引力，带emoji\n2. 内容结构清晰，分段明确\n3. 语言亲切自然，有画面感\n4. 适当使用小红书流行语\n5. 结尾有互动引导\n6. 添加相关热门标签\n\n输出格式：\n📌 标题：\n\n📝 正文：\n\n🏷️ 推荐标签："
+        }
+      ]
+    }
+  ]
+}

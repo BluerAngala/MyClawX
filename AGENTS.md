@@ -20,6 +20,24 @@ MyClawX 是一个跨平台的 **Electron 桌面应用**（React 19 + Vite + Type
 | 仅构建前端 | `pnpm run build:vite` |
 | 完整构建 (Vite + electron-builder) | `pnpm run build` |
 
+### OpenCode 配置
+
+项目已配置 OpenCode 使用 **硅基流动 (Silicon Flow)** 的 `Pro/moonshotai/Kimi-K2.5` 模型：
+
+- 配置文件：`.opencode/config.yaml`
+- 默认模型：`Pro/moonshotai/Kimi-K2.5`
+- API 端点：`https://api.siliconflow.cn/v1`
+- 获取 API Key：[https://cloud.siliconflow.cn/](https://cloud.siliconflow.cn/)
+
+**设置 API Key：**
+```bash
+# 方法1：环境变量
+export SILICONFLOW_API_KEY=sk-your-api-key
+
+# 方法2：添加到 .env 文件
+echo "SILICONFLOW_API_KEY=sk-your-api-key" >> .env
+```
+
 ### 容易被忽视的注意事项
 
 - **pnpm 版本**：确切的 pnpm 版本通过 `package.json` 中的 `packageManager` 锁定。安装前使用 `corepack enable && corepack prepare` 激活正确版本。

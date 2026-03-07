@@ -51,7 +51,9 @@ if (process.platform === 'linux') {
 // it — creating an infinite kill/restart loop on Windows.
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
+  console.log('[MyClawX] Another instance is already running, quitting...');
   app.quit();
+  process.exit(0);
 }
 
 // Global references
@@ -183,7 +185,7 @@ async function initialize(): Promise<void> {
   );
 
   // Register IPC handlers
-  registerIpcHandlers(gatewayManager, clawHubService, mainWindow);
+  await registerIpcHandlers(gatewayManager, clawHubService, mainWindow);
 
   // Register update handlers
   registerUpdateHandlers(appUpdater, mainWindow);

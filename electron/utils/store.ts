@@ -51,6 +51,10 @@ export interface AppSettings {
   selectedBundles: string[];
   enabledSkills: string[];
   disabledSkills: string[];
+
+  // Profession presets
+  activeProfession?: string;
+  professionConfig?: unknown;
 }
 
 /**
@@ -88,6 +92,10 @@ const defaults: AppSettings = {
   selectedBundles: ['productivity', 'developer'],
   enabledSkills: [],
   disabledSkills: [],
+
+  // Profession presets
+  activeProfession: undefined,
+  professionConfig: undefined,
 };
 
 /**

@@ -126,11 +126,11 @@ async function getProviderFallbackModelRefs(config: ProviderConfig): Promise<str
 /**
  * Register all IPC handlers
  */
-export function registerIpcHandlers(
+export async function registerIpcHandlers(
   gatewayManager: GatewayManager,
   clawHubService: ClawHubService,
   mainWindow: BrowserWindow
-): void {
+): Promise<void> {
   // Gateway handlers
   registerGatewayHandlers(gatewayManager, mainWindow);
 
@@ -184,6 +184,77 @@ export function registerIpcHandlers(
 
   // File staging handlers (upload/send separation)
   registerFileHandlers();
+
+  // Profession preset handlers
+  await registerProfessionHandlers();
+}
+
+/**
+ * Profession preset IPC handlers
+ */
+async function registerProfessionHandlers(): Promise<void> {
+  const {
+    loadProfession,
+    loadAllProfessions,
+    getUserProfessionConfig,
+    applyProfessionScene,
+    clearProfessionConfig,
+  } = await import('../utils/profession-preset');
+
+  // Get all professions
+  ipcMain.handle('profession:getAll', async () => {
+    try {
+      const professions = await loadAllProfessions();
+      return { success: true, professions };
+    } catch (error) {
+      console.error('Failed to load professions:', error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Get a single profession
+  ipcMain.handle('profession:get', async (_, id: string) => {
+    try {
+      const profession = await loadProfession(id);
+      return { success: true, profession };
+    } catch (error) {
+      console.error('Failed to load profession:', error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Get user's profession config
+  ipcMain.handle('profession:getUserConfig', async () => {
+    try {
+      const config = await getUserProfessionConfig();
+      return { success: true, config };
+    } catch (error) {
+      console.error('Failed to get user profession config:', error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Apply a profession scene
+  ipcMain.handle('profession:applyScene', async (_, professionId: string, sceneId: string) => {
+    try {
+      const result = await applyProfessionScene(professionId, sceneId);
+      return result;
+    } catch (error) {
+      console.error('Failed to apply profession scene:', error);
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Clear profession config
+  ipcMain.handle('profession:clear', async () => {
+    try {
+      await clearProfessionConfig();
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to clear profession config:', error);
+      return { success: false, error: String(error) };
+    }
+  });
 }
 
 /**

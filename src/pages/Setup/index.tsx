@@ -19,15 +19,19 @@ import {
   XCircle,
   ExternalLink,
   Copy,
+  Sparkles,
 } from 'lucide-react';
 import { TitleBar } from '@/components/layout/TitleBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Label } from '@/components/ui/label';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useGatewayStore } from '@/stores/gateway';
 import { useSettingsStore } from '@/stores/settings';
+import { useProfessionsStore } from '@/stores/professions';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@/i18n';
 import { toast } from 'sonner';
@@ -40,9 +44,10 @@ interface SetupStep {
 const STEP = {
   WELCOME: 0,
   RUNTIME: 1,
-  PROVIDER: 2,
-  INSTALLING: 3,
-  COMPLETE: 4,
+  PROFESSION: 2,
+  PROVIDER: 3,
+  INSTALLING: 4,
+  COMPLETE: 5,
 } as const;
 
 const steps: SetupStep[] = [
@@ -55,6 +60,11 @@ const steps: SetupStep[] = [
     id: 'runtime',
     title: 'Environment Check',
     description: 'Verifying system requirements',
+  },
+  {
+    id: 'profession',
+    title: 'Choose Your Path',
+    description: 'Select a profession preset to get started quickly',
   },
   {
     id: 'provider',
@@ -128,6 +138,9 @@ export function Setup() {
 
   const markSetupComplete = useSettingsStore((state) => state.markSetupComplete);
 
+  // Profession selection state
+  const [_professionConfigured, setProfessionConfigured] = useState(false);
+
   // Derive canProceed based on current step - computed directly to avoid useEffect
   const canProceed = useMemo(() => {
     switch (safeStepIndex) {
@@ -135,6 +148,8 @@ export function Setup() {
         return true;
       case STEP.RUNTIME:
         return runtimeChecksPassed;
+      case STEP.PROFESSION:
+        return true; // Profession is optional
       case STEP.PROVIDER:
         return providerConfigured;
       case STEP.INSTALLING:
@@ -232,6 +247,11 @@ export function Setup() {
             <div className="rounded-xl bg-card text-card-foreground border shadow-sm p-8 mb-8">
               {safeStepIndex === STEP.WELCOME && <WelcomeContent />}
               {safeStepIndex === STEP.RUNTIME && <RuntimeContent onStatusChange={setRuntimeChecksPassed} />}
+              {safeStepIndex === STEP.PROFESSION && (
+                <ProfessionContent
+                  onConfiguredChange={setProfessionConfigured}
+                />
+              )}
               {safeStepIndex === STEP.PROVIDER && (
                 <ProviderContent
                   providers={providers}
@@ -295,6 +315,204 @@ export function Setup() {
 }
 
 // ==================== Step Content Components ====================
+
+interface ProfessionContentProps {
+  onConfiguredChange: (configured: boolean) => void;
+}
+
+function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
+  const { t: _t } = useTranslation('setup');
+  const { professions, loading, fetchProfessions, applyScene } = useProfessionsStore();
+  const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
+  const [selectedScene, setSelectedScene] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
+
+  useEffect(() => {
+    void fetchProfessions();
+  }, [fetchProfessions]);
+
+  const handleApply = async () => {
+    if (!selectedProfession || !selectedScene) return;
+    setApplying(true);
+    const result = await applyScene(selectedProfession, selectedScene);
+    setApplying(false);
+    if (result.success) {
+      onConfiguredChange(true);
+      toast.success('职业场景已配置');
+    } else {
+      toast.error(result.error || '配置失败');
+    }
+  };
+
+  const profession = professions.find(p => p.id === selectedProfession);
+  const scene = profession?.scenes.find(s => s.id === selectedScene);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {!selectedProfession ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {professions.map((profession) => (
+            <Card
+              key={profession.id}
+              className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+              onClick={() => setSelectedProfession(profession.id)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <span className="text-4xl">{profession.icon}</span>
+                  <Badge variant={profession.difficulty === 'beginner' ? 'default' : 'outline'}>
+                    {profession.difficulty === 'beginner' ? '入门' : profession.difficulty}
+                  </Badge>
+                </div>
+                <CardTitle className="mt-2">{profession.nameZh}</CardTitle>
+                <CardDescription>{profession.descriptionZh}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>{profession.estimatedSetupTime}分钟设置</span>
+                  <span>{profession.scenes.length}个场景</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          <Card className="border-dashed opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <span className="text-4xl">🛒</span>
+                <Badge variant="outline">即将推出</Badge>
+              </div>
+              <CardTitle className="mt-2">电商运营</CardTitle>
+              <CardDescription>商品优化、客服自动化、数据分析</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-dashed opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <span className="text-4xl">⚖️</span>
+                <Badge variant="outline">即将推出</Badge>
+              </div>
+              <CardTitle className="mt-2">律师/法务</CardTitle>
+              <CardDescription>合同审查、法律研究、文书起草</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      ) : !selectedScene ? (
+        <div className="space-y-4">
+          <Button variant="ghost" onClick={() => setSelectedProfession(null)}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            返回
+          </Button>
+
+          <div className="space-y-3">
+            {profession?.scenes.map((scene) => (
+              <Card
+                key={scene.id}
+                className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+                onClick={() => setSelectedScene(scene.id)}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{scene.icon}</span>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{scene.nameZh}</CardTitle>
+                      <CardDescription>{scene.descriptionZh}</CardDescription>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-1">
+                    {scene.useCasesZh.slice(0, 2).map((useCase, index) => (
+                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                        {useCase}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <Button variant="ghost" onClick={() => setSelectedScene(null)}>
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            返回
+          </Button>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{scene?.icon}</span>
+                <div>
+                  <CardTitle>{scene?.nameZh}</CardTitle>
+                  <CardDescription>{scene?.descriptionZh}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="mb-2 text-sm font-medium">包含技能：</p>
+                <div className="flex flex-wrap gap-2">
+                  {scene?.skills.map((skill) => (
+                    <Badge key={skill.slug} variant={skill.required ? 'default' : 'outline'}>
+                      {skill.description || skill.slug}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">提示词模板：</p>
+                <div className="space-y-2">
+                  {scene?.promptTemplates.map((template) => (
+                    <div key={template.id} className="rounded bg-muted p-2 text-sm">
+                      <span className="font-medium">{template.nameZh}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button onClick={handleApply} disabled={applying} className="w-full">
+                {applying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    应用中...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    应用此配置
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className="text-center">
+        <Button variant="ghost" onClick={() => onConfiguredChange(true)}>
+          跳过，稍后配置
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function WelcomeContent() {
   const { t } = useTranslation(['setup', 'settings']);
@@ -457,8 +675,7 @@ function RuntimeContent({ onStatusChange }: RuntimeContentProps) {
   // Update canProceed when gateway status changes
   useEffect(() => {
     const allPassed = checks.nodejs.status === 'success'
-      && checks.openclaw.status === 'success'
-      && (checks.gateway.status === 'success' || gatewayStatus.state === 'running');
+      && checks.openclaw.status === 'success';
     onStatusChange(allPassed);
   }, [checks, gatewayStatus, onStatusChange]);
 
