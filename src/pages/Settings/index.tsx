@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useSettingsStore } from '@/stores/settings';
 import { useGatewayStore } from '@/stores/gateway';
@@ -67,6 +68,10 @@ export function Settings() {
     setAutoDownloadUpdate,
     devModeUnlocked,
     setDevModeUnlocked,
+    skillMirror,
+    setSkillMirror,
+    skillCustomMirrorUrl,
+    setSkillCustomMirrorUrl,
   } = useSettingsStore();
 
   const { status: gatewayStatus, restart: restartGateway } = useGatewayStore();
@@ -551,7 +556,7 @@ export function Settings() {
             </div>
 
             {/* Dev mode toggle */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <Label>{t('advanced.devMode')}</Label>
                 <p className="text-sm text-muted-foreground">
@@ -562,6 +567,42 @@ export function Settings() {
                 checked={devModeUnlocked}
                 onCheckedChange={setDevModeUnlocked}
               />
+            </div>
+
+            {/* Skill Mirror Settings */}
+            <div className="rounded-lg border p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>{t('advanced.skillMirror')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('advanced.skillMirrorDesc')}
+                  </p>
+                </div>
+                <Select
+                  value={skillMirror}
+                  onChange={(e) => setSkillMirror(e.target.value as any)}
+                  className="w-[180px]"
+                >
+                  <option value="official">{t('advanced.mirrorOfficial')}</option>
+                  <option value="china">{t('advanced.mirrorChina')}</option>
+                  <option value="custom">{t('advanced.mirrorCustom')}</option>
+                </Select>
+              </div>
+
+              {skillMirror === 'custom' && (
+                <div className="space-y-2 pt-2 border-t">
+                  <Label htmlFor="custom-mirror-url">{t('advanced.customMirrorUrl')}</Label>
+                  <Input
+                    id="custom-mirror-url"
+                    value={skillCustomMirrorUrl}
+                    onChange={(e) => setSkillCustomMirrorUrl(e.target.value)}
+                    placeholder="https://registry.example.com"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('advanced.customMirrorUrlHelp')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </AccordionItem>

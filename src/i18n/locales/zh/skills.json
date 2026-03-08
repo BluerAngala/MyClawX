@@ -76,6 +76,8 @@
         "searching": "正在搜索 ClawHub...",
         "noResults": "未找到匹配的技能。",
         "emptyPrompt": "搜索新技能以扩展您的能力。",
-        "searchError": "ClawHub 搜索失败。请检查您的连接或安装。"
+        "searchError": "ClawHub 搜索失败。请检查您的连接或安装。",
+        "rateLimitMirrorHint": "官方源请求过于频繁。建议切换到国内镜像源以获得更稳定的体验。",
+        "switchToMirror": "立即切换到国内镜像"
     }
 }

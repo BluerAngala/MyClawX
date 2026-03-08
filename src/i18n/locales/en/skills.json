@@ -76,6 +76,8 @@
         "searching": "Searching ClawHub...",
         "noResults": "No skills found matching your search.",
         "emptyPrompt": "Search for new skills to expand your capabilities.",
-        "searchError": "ClawHub search failed. Check your connection or installation."
+        "searchError": "ClawHub search failed. Check your connection or installation.",
+        "rateLimitMirrorHint": "Official registry rate limit exceeded. We recommend switching to the China mirror for a more stable experience.",
+        "switchToMirror": "Switch to China Mirror"
     }
 }

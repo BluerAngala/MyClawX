@@ -8,6 +8,7 @@ import path from 'path';
 import { app, shell } from 'electron';
 import { getOpenClawConfigDir, ensureDir, getClawHubCliBinPath, getClawHubCliEntryPath, quoteForCmd, getOpenClawSkillsDir } from '../utils/paths';
 import { proxyAwareFetch } from '../utils/proxy-fetch';
+import { getSetting } from '../utils/store';
 
 export interface ClawHubSearchParams {
     query: string;
@@ -72,6 +73,28 @@ export class ClawHubService {
      * Run a ClawHub CLI command
      */
     private async runCommand(args: string[]): Promise<string> {
+        // Apply mirror if configured
+        const mirror = await getSetting('skillMirror');
+        const customUrl = mirror === 'custom' ? await getSetting('skillCustomMirrorUrl') : undefined;
+
+        try {
+            return await this.executeCommand(args, mirror, customUrl);
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            
+            // If rate limited on official registry, try automatic fallback to China mirror
+            if (mirror === 'official' && errorMsg.includes('Rate limit exceeded')) {
+                console.warn('Rate limit hit on official registry, retrying with China mirror...');
+                return await this.executeCommand(args, 'china');
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Execute the actual command
+     */
+    private async executeCommand(args: string[], mirror: string, customUrl?: string): Promise<string> {
         return new Promise((resolve, reject) => {
             if (this.useNodeRunner && !fs.existsSync(this.cliEntryPath)) {
                 reject(new Error(`ClawHub CLI entry not found at: ${this.cliEntryPath}`));
@@ -85,7 +108,7 @@ export class ClawHubService {
 
             const commandArgs = this.useNodeRunner ? [this.cliEntryPath, ...args] : args;
             const displayCommand = [this.cliPath, ...commandArgs].join(' ');
-            console.log(`Running ClawHub command: ${displayCommand}`);
+            console.log(`Running ClawHub command: ${displayCommand} (mirror: ${mirror})`);
 
             const isWin = process.platform === 'win32';
             const useShell = isWin && !this.useNodeRunner;
@@ -95,6 +118,13 @@ export class ClawHubService {
                 CI: 'true',
                 FORCE_COLOR: '0',
             };
+
+            if (mirror === 'china') {
+                env.CLAWHUB_REGISTRY = 'https://registry.clawhub.ai';
+            } else if (mirror === 'custom' && customUrl) {
+                env.CLAWHUB_REGISTRY = customUrl;
+            }
+
             if (this.useNodeRunner) {
                 env.ELECTRON_RUN_AS_NODE = '1';
             }

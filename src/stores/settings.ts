@@ -35,6 +35,10 @@ interface SettingsState {
   sidebarCollapsed: boolean;
   devModeUnlocked: boolean;
 
+  // Skills & Marketplace
+  skillMirror: 'official' | 'china' | 'custom';
+  skillCustomMirrorUrl?: string;
+
   // Setup
   setupComplete: boolean;
 
@@ -57,6 +61,8 @@ interface SettingsState {
   setAutoDownloadUpdate: (value: boolean) => void;
   setSidebarCollapsed: (value: boolean) => void;
   setDevModeUnlocked: (value: boolean) => void;
+  setSkillMirror: (mirror: 'official' | 'china' | 'custom') => void;
+  setSkillCustomMirrorUrl: (url: string) => void;
   markSetupComplete: () => void;
   resetSettings: () => void;
 }
@@ -84,6 +90,8 @@ const defaultSettings = {
   autoDownloadUpdate: false,
   sidebarCollapsed: false,
   devModeUnlocked: false,
+  skillMirror: 'official' as const,
+  skillCustomMirrorUrl: '',
   setupComplete: false,
 };
 
@@ -121,7 +129,18 @@ export const useSettingsStore = create<SettingsState>()(
       setAutoCheckUpdate: (autoCheckUpdate) => set({ autoCheckUpdate }),
       setAutoDownloadUpdate: (autoDownloadUpdate) => set({ autoDownloadUpdate }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
-      setDevModeUnlocked: (devModeUnlocked) => set({ devModeUnlocked }),
+      setDevModeUnlocked: (devModeUnlocked) => {
+        set({ devModeUnlocked });
+        void window.electron.ipcRenderer.invoke('settings:set', 'devModeUnlocked', devModeUnlocked).catch(() => {});
+      },
+      setSkillMirror: (mirror) => {
+        set({ skillMirror: mirror });
+        void window.electron.ipcRenderer.invoke('settings:set', 'skillMirror', mirror).catch(() => {});
+      },
+      setSkillCustomMirrorUrl: (url) => {
+        set({ skillCustomMirrorUrl: url });
+        void window.electron.ipcRenderer.invoke('settings:set', 'skillCustomMirrorUrl', url).catch(() => {});
+      },
       markSetupComplete: () => set({ setupComplete: true }),
       resetSettings: () => set(defaultSettings),
     }),

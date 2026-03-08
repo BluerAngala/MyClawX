@@ -154,7 +154,14 @@
     "title": "高级",
     "description": "高级选项",
     "devMode": "开发者模式",
-    "devModeDesc": "显示开发者工具和快捷方式"
+    "devModeDesc": "启用高级开发者工具和调试选项。",
+    "skillMirror": "技能市场镜像源",
+    "skillMirrorDesc": "选择国内加速镜像以解决 ClawHub.ai 访问频繁报错问题。",
+    "mirrorOfficial": "官方源 (ClawHub.ai)",
+    "mirrorChina": "国内加速源 (推荐)",
+    "mirrorCustom": "自定义镜像源",
+    "customMirrorUrl": "自定义镜像地址",
+    "customMirrorUrlHelp": "请输入完整的 Registry API 地址（例如 https://registry.example.com）。"
   },
   "developer": {
     "title": "开发者",

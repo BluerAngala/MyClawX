@@ -37,6 +37,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSkillsStore } from '@/stores/skills';
 import { useGatewayStore } from '@/stores/gateway';
+import { useSettingsStore } from '@/stores/settings';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -537,6 +538,8 @@ export function Skills() {
     searchError,
     installing
   } = useSkillsStore();
+
+  const { skillMirror, setSkillMirror } = useSettingsStore();
   const { t } = useTranslation('skills');
   const gatewayStatus = useGatewayStore((state) => state.status);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1083,13 +1086,28 @@ export function Skills() {
 
             {searchError && (
               <Card className="border-destructive/50 bg-destructive/5">
-                <CardContent className="py-3 text-sm text-destructive flex items-start gap-2">
-                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <span>
-                    {['searchTimeoutError', 'searchRateLimitError', 'timeoutError', 'rateLimitError'].includes(searchError.replace('Error: ', ''))
-                      ? t(`toast.${searchError.replace('Error: ', '')}`, { path: skillsDirPath })
-                      : t('marketplace.searchError')}
-                  </span>
+                <CardContent className="py-3 text-sm text-destructive flex flex-col gap-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>
+                      {['searchTimeoutError', 'searchRateLimitError', 'timeoutError', 'rateLimitError'].includes(searchError.replace('Error: ', ''))
+                        ? t(`toast.${searchError.replace('Error: ', '')}`, { path: skillsDirPath })
+                        : searchError.includes('Rate limit exceeded')
+                          ? t('marketplace.rateLimitMirrorHint')
+                          : t('marketplace.searchError')}
+                    </span>
+                  </div>
+                  {searchError.includes('Rate limit exceeded') && skillMirror === 'official' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-fit self-end border-destructive/20 text-destructive hover:bg-destructive/10"
+                      onClick={() => setSkillMirror('china')}
+                    >
+                      <Globe className="h-3 w-3 mr-2" />
+                      {t('marketplace.switchToMirror')}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}

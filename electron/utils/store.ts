@@ -52,6 +52,10 @@ export interface AppSettings {
   enabledSkills: string[];
   disabledSkills: string[];
 
+  // Skills & Marketplace
+  skillMirror: 'official' | 'china' | 'custom';
+  skillCustomMirrorUrl?: string;
+
   // Profession presets
   activeProfession?: string;
   professionConfig?: unknown;
@@ -95,6 +99,9 @@ const defaults: AppSettings = {
   enabledSkills: [],
   disabledSkills: [],
 
+  // Skills & Marketplace
+  skillMirror: 'official',
+
   // Profession presets
   activeProfession: undefined,
   professionConfig: undefined,
@@ -116,7 +123,7 @@ async function getSettingsStore() {
 }
 
 /**
- * Get a setting value
+ * Get a specific setting
  */
 export async function getSetting<K extends keyof AppSettings>(key: K): Promise<AppSettings[K]> {
   const store = await getSettingsStore();
@@ -124,22 +131,19 @@ export async function getSetting<K extends keyof AppSettings>(key: K): Promise<A
 }
 
 /**
- * Set a setting value
- */
-export async function setSetting<K extends keyof AppSettings>(
-  key: K,
-  value: AppSettings[K]
-): Promise<void> {
-  const store = await getSettingsStore();
-  store.set(key, value);
-}
-
-/**
  * Get all settings
  */
 export async function getAllSettings(): Promise<AppSettings> {
   const store = await getSettingsStore();
-  return store.store;
+  return store.store as AppSettings;
+}
+
+/**
+ * Set a specific setting
+ */
+export async function setSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): Promise<void> {
+  const store = await getSettingsStore();
+  store.set(key, value);
 }
 
 /**

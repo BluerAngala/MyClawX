@@ -154,7 +154,14 @@
     "title": "Advanced",
     "description": "Power-user options",
     "devMode": "Developer Mode",
-    "devModeDesc": "Show developer tools and shortcuts"
+    "devModeDesc": "Enable advanced developer tools and debug options.",
+    "skillMirror": "Skill Marketplace Mirror",
+    "skillMirrorDesc": "Choose a mirror for faster skill downloads and to avoid rate limit errors.",
+    "mirrorOfficial": "Official (ClawHub.ai)",
+    "mirrorChina": "China Mirror (Recommended)",
+    "mirrorCustom": "Custom Mirror",
+    "customMirrorUrl": "Custom Mirror URL",
+    "customMirrorUrlHelp": "Enter the full Registry API URL (e.g., https://registry.example.com)."
   },
   "developer": {
     "title": "Developer",
