@@ -62,7 +62,7 @@ importers:
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@soimy/dingtalk':
         specifier: ^3.1.4
-        version: 3.1.4(openclaw@2026.3.1(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)))
+        version: 3.1.4(openclaw@2026.3.2(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)))
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -130,8 +130,8 @@ importers:
         specifier: ^0.563.0
         version: 0.563.0(react@19.2.4)
       openclaw:
-        specifier: 2026.3.1
-        version: 2026.3.1(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3))
+        specifier: 2026.3.2
+        version: 2026.3.2(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3))
       png2icons:
         specifier: ^2.0.1
         version: 2.0.1
@@ -5192,8 +5192,8 @@ packages:
       zod:
         optional: true
 
-  openclaw@2026.3.1:
-    resolution: {integrity: sha512-7Pt5ykhaYa8TYpLWnBhaMg6Lp6kfk3rMKgqJ3WWESKM9BizYu1fkH/rF9BLeXlsNASgZdLp4oR8H0XfvIIoXIg==}
+  openclaw@2026.3.2:
+    resolution: {integrity: sha512-Gkqx24m7PF1DUXPI968DuC9n52lTZ5hI3X5PIi0HosC7J7d6RLkgVppj1mxvgiQAWMp41E41elvoi/h4KBjFcQ==}
     engines: {node: '>=22.12.0'}
     hasBin: true
     peerDependencies:
@@ -6044,6 +6044,10 @@ packages:
 
   strip-ansi@7.1.2:
     resolution: {integrity: sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA==}
+    engines: {node: '>=12'}
+
+  strip-ansi@7.2.0:
+    resolution: {integrity: sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==}
     engines: {node: '>=12'}
 
   strip-indent@3.0.0:
@@ -9421,12 +9425,12 @@ snapshots:
       '@snazzah/davey-win32-ia32-msvc': 0.1.9
       '@snazzah/davey-win32-x64-msvc': 0.1.9
 
-  '@soimy/dingtalk@3.1.4(openclaw@2026.3.1(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)))':
+  '@soimy/dingtalk@3.1.4(openclaw@2026.3.2(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)))':
     dependencies:
       axios: 1.13.5(debug@4.4.3)
       dingtalk-stream: 2.1.4
       form-data: 4.0.5
-      openclaw: 2026.3.1(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3))
+      openclaw: 2026.3.2(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3))
       zod: 4.3.6
     transitivePeerDependencies:
       - bufferutil
@@ -12772,7 +12776,7 @@ snapshots:
       ws: 8.19.0
       zod: 4.3.6
 
-  openclaw@2026.3.1(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)):
+  openclaw@2026.3.2(@napi-rs/canvas@0.1.95)(@types/express@5.0.6)(encoding@0.1.13)(hono@4.11.8)(node-llama-cpp@3.15.1(typescript@5.9.3)):
     dependencies:
       '@agentclientprotocol/sdk': 0.14.1(zod@4.3.6)
       '@aws-sdk/client-bedrock': 3.1000.0
@@ -12827,6 +12831,7 @@ snapshots:
       qrcode-terminal: 0.12.0
       sharp: 0.34.5
       sqlite-vec: 0.1.7-alpha.2
+      strip-ansi: 7.2.0
       tar: 7.5.9
       tslog: 4.10.2
       undici: 7.22.0
@@ -13806,6 +13811,10 @@ snapshots:
       ansi-regex: 5.0.1
 
   strip-ansi@7.1.2:
+    dependencies:
+      ansi-regex: 6.2.2
+
+  strip-ansi@7.2.0:
     dependencies:
       ansi-regex: 6.2.2
 
