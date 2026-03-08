@@ -597,7 +597,10 @@ export function Skills() {
 
     return matchesSearch && matchesSource;
   }).sort((a, b) => {
-    // Enabled skills first
+    // Blocked skills always last
+    if (a.isBlockedInChina && !b.isBlockedInChina) return 1;
+    if (!a.isBlockedInChina && b.isBlockedInChina) return -1;
+    // Enabled skills first (among non-blocked)
     if (a.enabled && !b.enabled) return -1;
     if (!a.enabled && b.enabled) return 1;
     // Then core/bundled
