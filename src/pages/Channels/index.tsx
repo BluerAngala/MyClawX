@@ -1107,54 +1107,56 @@ function CustomChannelDialog({ onClose, onChannelAdded }: CustomChannelDialogPro
                 {t('customChannel.addField')}
               </Button>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {fields.map((field, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  <div className="flex-1 space-y-1">
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex-1 grid grid-cols-2 gap-2">
                     <Input
                       placeholder={t('customChannel.fieldKey')}
                       value={field.key}
                       onChange={(e) => handleFieldChange(index, 'key', e.target.value)}
-                      className="h-8"
+                      className="h-9"
                     />
-                    <div className="flex gap-1">
+                    <div className="relative flex items-center">
                       <Input
                         type={field.isSecret && !visibleFields.has(index) ? 'password' : 'text'}
                         placeholder={t('customChannel.fieldValue')}
                         value={field.value}
                         onChange={(e) => handleFieldChange(index, 'value', e.target.value)}
-                        className="h-8 flex-1"
+                        className={`h-9 ${field.isSecret ? 'pr-16' : 'pr-9'}`}
                       />
-                      {field.isSecret && (
+                      <div className="absolute right-1 flex items-center gap-0.5">
+                        {field.isSecret && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => toggleFieldVisibility(index)}
+                            title={visibleFields.has(index) ? t('customChannel.hideValue') : t('customChannel.showValue')}
+                          >
+                            {visibleFields.has(index) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          onClick={() => toggleFieldVisibility(index)}
-                          title={visibleFields.has(index) ? t('customChannel.hideValue') : t('customChannel.showValue')}
+                          className="h-7 w-7"
+                          onClick={() => handleFieldSecretToggle(index)}
+                          title={field.isSecret ? t('customChannel.unmarkSecret') : t('customChannel.markSecret')}
                         >
-                          {visibleFields.has(index) ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                          <LockIcon className={`h-4 w-4 ${field.isSecret ? 'text-primary' : 'text-muted-foreground'}`} />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleFieldSecretToggle(index)}
-                        title={field.isSecret ? t('customChannel.unmarkSecret') : t('customChannel.markSecret')}
-                      >
-                        <LockIcon className={`h-3 w-3 ${field.isSecret ? 'text-primary' : 'text-muted-foreground'}`} />
-                      </Button>
+                      </div>
                     </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive mt-0.5"
+                    className="h-9 w-9 text-destructive hover:text-destructive shrink-0"
                     onClick={() => handleRemoveField(index)}
                     disabled={fields.length === 1}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
