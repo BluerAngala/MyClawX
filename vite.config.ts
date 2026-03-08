@@ -2,40 +2,46 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
+import { nodeExternals } from 'rollup-plugin-node-externals';
 import { resolve } from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     electron([
       {
-        // Main process entry file
         entry: 'electron/main/index.ts',
         onstart(options) {
           options.startup();
         },
         vite: {
+          plugins: [
+            nodeExternals({
+              builtins: true,
+              deps: true,
+              devDeps: true,
+              optDeps: true,
+              peerDeps: true,
+            }),
+          ],
           build: {
             outDir: 'dist-electron/main',
-            rollupOptions: {
-              external: ['electron', 'electron-store', 'electron-updater', 'ws'],
-            },
+            sourcemap: true,
+            minify: process.env.NODE_ENV === 'production',
           },
         },
       },
       {
-        // Preload scripts entry file
         entry: 'electron/preload/index.ts',
         onstart(options) {
           options.reload();
         },
         vite: {
+          plugins: [nodeExternals()],
           build: {
             outDir: 'dist-electron/preload',
-            rollupOptions: {
-              external: ['electron'],
-            },
+            sourcemap: true,
+            minify: process.env.NODE_ENV === 'production',
           },
         },
       },
