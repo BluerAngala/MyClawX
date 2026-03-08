@@ -5,6 +5,8 @@ import 'zx/globals';
 const ROOT_DIR = path.resolve(__dirname, '..');
 const UV_VERSION = '0.10.0';
 const BASE_URL = `https://github.com/astral-sh/uv/releases/download/${UV_VERSION}`;
+// Fallback mirror for regions with poor GitHub access
+const MIRROR_URL = `https://mirror.ghproxy.com/https://github.com/astral-sh/uv/releases/download/${UV_VERSION}`;
 const OUTPUT_BASE = path.join(ROOT_DIR, 'resources', 'bin');
 
 // Mapping Node platforms/archs to uv release naming
@@ -51,7 +53,7 @@ async function setupTarget(id) {
 
   const targetDir = path.join(OUTPUT_BASE, id);
   const tempDir = path.join(ROOT_DIR, 'temp_uv_extract');
-  const archivePath = path.join(ROOT_DIR, target.filename);
+  const archivePath = path.join(ROOT_DIR, target.filename).replace(/\\/g, '/');
   const downloadUrl = `${BASE_URL}/${target.filename}`;
 
   echo(chalk.blue`\n📦 Setting up uv for ${id}...`);
@@ -64,11 +66,27 @@ async function setupTarget(id) {
 
   try {
     // Download
-    echo`⬇️ Downloading: ${downloadUrl}`;
-    const response = await fetch(downloadUrl);
-    if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
-    const buffer = await response.arrayBuffer();
-    await fs.writeFile(archivePath, Buffer.from(buffer));
+    const urls = [
+      downloadUrl,
+      `https://ghp.ci/${downloadUrl}`,
+      `https://mirror.ghproxy.com/${downloadUrl}`,
+      `https://ghproxy.net/${downloadUrl}`,
+      `https://gh-proxy.com/${downloadUrl}`
+    ];
+    let success = false;
+    for (let url of urls) {
+      // Fix potential double slashes from concat
+      url = url.replace(/([^:])\/\//g, '$1/');
+      try {
+        console.log(`⬇️ Attempting download: ${url}`);
+        await $`curl -L --fail --connect-timeout 10 --max-time 300 --output ${archivePath} ${url}`;
+        success = true;
+        break;
+      } catch (err) {
+        console.log(`⚠️ Download failed for ${url}, trying next...`);
+      }
+    }
+    if (!success) throw new Error(`Failed to download uv from all sources.`);
 
     // Extract
     echo`📂 Extracting...`;
