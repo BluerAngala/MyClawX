@@ -6,7 +6,8 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { app, shell } from 'electron';
-import { getOpenClawConfigDir, ensureDir, getClawHubCliBinPath, getClawHubCliEntryPath, quoteForCmd } from '../utils/paths';
+import { getOpenClawConfigDir, ensureDir, getClawHubCliBinPath, getClawHubCliEntryPath, quoteForCmd, getOpenClawSkillsDir } from '../utils/paths';
+import { proxyAwareFetch } from '../utils/proxy-fetch';
 
 export interface ClawHubSearchParams {
     query: string;
@@ -89,7 +90,7 @@ export class ClawHubService {
             const isWin = process.platform === 'win32';
             const useShell = isWin && !this.useNodeRunner;
             const { NODE_OPTIONS: _nodeOptions, ...baseEnv } = process.env;
-            const env = {
+            const env: Record<string, string | undefined> = {
                 ...baseEnv,
                 CI: 'true',
                 FORCE_COLOR: '0',
@@ -313,6 +314,125 @@ export class ClawHubService {
             console.error('ClawHub list error:', error);
             return [];
         }
+    }
+
+    /**
+     * Install a skill from a local ZIP file
+     * @returns The slug of the installed skill
+     */
+    async installFromZip(zipPath: string): Promise<string> {
+        const tempDir = path.join(app.getPath('temp'), `clawhub-install-${Date.now()}`);
+        ensureDir(tempDir);
+
+        try {
+            // 1. Extract ZIP
+            await this.extractZip(zipPath, tempDir);
+
+            // 2. Identify the skill root and slug
+            // Look for package.json or skill.yaml or index.js
+            let skillRoot = tempDir;
+            const items = fs.readdirSync(tempDir);
+            
+            // If there's only one directory, go into it (common in GitHub ZIPs)
+            if (items.length === 1 && fs.statSync(path.join(tempDir, items[0])).isDirectory()) {
+                skillRoot = path.join(tempDir, items[0]);
+            }
+
+            // Detect slug from folder name or package.json
+            let slug = path.basename(skillRoot).replace(/-main$|-master$/, '');
+            const pkgJsonPath = path.join(skillRoot, 'package.json');
+            if (fs.existsSync(pkgJsonPath)) {
+                try {
+                    const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+                    if (pkg.name) {
+                        // Remove @scope/ if present
+                        slug = pkg.name.split('/').pop() || slug;
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse package.json for slug', e);
+                }
+            }
+
+            // 3. Move to skills directory
+            const finalDir = path.join(getOpenClawSkillsDir(), slug);
+            if (fs.existsSync(finalDir)) {
+                await fs.promises.rm(finalDir, { recursive: true, force: true });
+            }
+            ensureDir(path.dirname(finalDir));
+            
+            try {
+                await fs.promises.rename(skillRoot, finalDir);
+            } catch (e) {
+                // Fallback for cross-device rename
+                console.log('Cross-device rename failed, falling back to copy+delete', e);
+                await fs.promises.cp(skillRoot, finalDir, { recursive: true });
+                await fs.promises.rm(skillRoot, { recursive: true, force: true });
+            }
+
+            return slug;
+        } finally {
+            // Cleanup temp dir if it still exists
+            if (fs.existsSync(tempDir)) {
+                try {
+                    await fs.promises.rm(tempDir, { recursive: true, force: true });
+                } catch (e) {
+                    console.warn('Failed to cleanup temp dir', e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Install a skill from a URL (direct ZIP link)
+     */
+    async installFromUrl(url: string): Promise<string> {
+        const tempZip = path.join(app.getPath('temp'), `clawhub-download-${Date.now()}.zip`);
+        
+        try {
+            // 1. Download ZIP
+            const response = await proxyAwareFetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to download skill: ${response.statusText}`);
+            }
+            const buffer = Buffer.from(await response.arrayBuffer());
+            await fs.promises.writeFile(tempZip, buffer);
+
+            // 2. Install from the downloaded ZIP
+            return await this.installFromZip(tempZip);
+        } finally {
+            if (fs.existsSync(tempZip)) {
+                await fs.promises.unlink(tempZip).catch(() => {});
+            }
+        }
+    }
+
+    /**
+     * Extract a ZIP file using system tools
+     */
+    private async extractZip(zipPath: string, targetDir: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (process.platform === 'win32') {
+                // Use PowerShell on Windows
+                const psCommand = `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${zipPath.replace(/'/g, "''")}', '${targetDir.replace(/'/g, "''")}')`;
+                const child = spawn('powershell.exe', ['-NoProfile', '-Command', psCommand], {
+                    windowsHide: true,
+                });
+
+                child.on('close', (code) => {
+                    if (code === 0) resolve();
+                    else reject(new Error(`PowerShell extraction failed with code ${code}`));
+                });
+                child.on('error', reject);
+            } else {
+                // Use unzip on POSIX
+                const child = spawn('unzip', ['-q', '-o', zipPath, '-d', targetDir]);
+                child.on('close', (code) => {
+                    if (code === 0) resolve();
+                    else reject(new Error(`Unzip failed with code ${code}`));
+                });
+                child.on('error', reject);
+            }
+        });
     }
 
     /**

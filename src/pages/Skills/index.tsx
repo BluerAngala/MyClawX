@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  ShieldCheck,
   ChevronRight,
   Sparkles,
   Download,
@@ -27,6 +26,8 @@ import {
   Key,
   ChevronDown,
   FolderOpen,
+  Link,
+  FileArchive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -529,6 +530,8 @@ export function Skills() {
     searchResults,
     searchSkills,
     installSkill,
+    installSkillFromZip,
+    installSkillFromUrl,
     uninstallSkill,
     searching,
     searchError,
@@ -538,6 +541,8 @@ export function Skills() {
   const gatewayStatus = useGatewayStore((state) => state.status);
   const [searchQuery, setSearchQuery] = useState('');
   const [marketplaceQuery, setMarketplaceQuery] = useState('');
+  const [installUrl, setInstallUrl] = useState('');
+  const [isUrlInstalling, setIsUrlInstalling] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedSource, setSelectedSource] = useState<'all' | 'built-in' | 'marketplace'>('all');
@@ -675,6 +680,43 @@ export function Skills() {
       }
     }
   }, [installSkill, enableSkill, t, skillsDirPath]);
+
+  // Handle local ZIP install
+  const handleZipInstall = useCallback(async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('dialog:open', {
+        title: t('marketplace.selectZip'),
+        filters: [{ name: 'ZIP Archives', extensions: ['zip'] }],
+        properties: ['openFile']
+      }) as { canceled: boolean; filePaths: string[] };
+
+      if (result.canceled || result.filePaths.length === 0) return;
+
+      const slug = await installSkillFromZip(result.filePaths[0]);
+      await enableSkill(slug);
+      toast.success(t('toast.installed'));
+    } catch (err) {
+      toast.error(t('toast.failedInstall') + ': ' + (err instanceof Error ? err.message : String(err)));
+    }
+  }, [installSkillFromZip, enableSkill, t]);
+
+  // Handle URL install
+  const handleUrlInstall = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!installUrl.trim()) return;
+    
+    setIsUrlInstalling(true);
+    try {
+      const slug = await installSkillFromUrl(installUrl.trim());
+      await enableSkill(slug);
+      toast.success(t('toast.installed'));
+      setInstallUrl('');
+    } catch (err) {
+      toast.error(t('toast.failedInstall') + ': ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setIsUrlInstalling(false);
+    }
+  }, [installUrl, installSkillFromUrl, enableSkill, t]);
 
   // Initial marketplace load (Discovery)
   useEffect(() => {
@@ -914,14 +956,62 @@ export function Skills() {
 
         <TabsContent value="marketplace" className="space-y-6 mt-6">
           <div className="flex flex-col gap-4">
-            <Card className="border-muted/50 bg-muted/20">
-              <CardContent className="py-4 flex items-start gap-3">
-                <ShieldCheck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div className="text-muted-foreground">
-                  {t('marketplace.securityNote')}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-info/30 bg-info/5">
+                <CardHeader className="py-4 pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <FileArchive className="h-4 w-4 text-primary" />
+                    {t('marketplace.zipInstallTitle')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {t('marketplace.zipInstallDesc')}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2"
+                    onClick={handleZipInstall}
+                    disabled={loading}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {t('marketplace.selectZip')}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-primary/20 bg-primary/5">
+                <CardHeader className="py-4 pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Link className="h-4 w-4 text-primary" />
+                    {t('marketplace.urlInstallTitle')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {t('marketplace.urlInstallDesc')}
+                  </p>
+                  <form onSubmit={handleUrlInstall} className="flex gap-2">
+                    <Input
+                      placeholder="https://.../skill.zip"
+                      value={installUrl}
+                      onChange={(e) => setInstallUrl(e.target.value)}
+                      className="h-8 text-xs flex-1"
+                      disabled={isUrlInstalling}
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-8 px-3"
+                      disabled={isUrlInstalling || !installUrl.trim()}
+                    >
+                      {isUrlInstalling ? <LoadingSpinner className="h-3 w-3" /> : t('install')}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
             <Card className="border-info/30 bg-info/5">
               <CardContent className="py-3 text-sm flex items-start gap-2 text-muted-foreground">
                 <Download className="h-4 w-4 mt-0.5 shrink-0" />

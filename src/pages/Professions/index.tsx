@@ -100,7 +100,7 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="mb-2 text-3xl font-bold">
-            {step === 'select-profession' && '选择您的职业场景'}
+            {step === 'select-profession' && '选择您的职业/场景'}
             {step === 'select-scene' && `${selectedProfession?.nameZh} - 选择场景`}
             {step === 'confirm' && '确认配置'}
           </h1>

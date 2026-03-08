@@ -107,6 +107,8 @@ const electronAPI = {
         'clawhub:uninstall',
         'clawhub:list',
         'clawhub:openSkillReadme',
+        'clawhub:installFromUrl',
+        'clawhub:installFromZip',
         // UV
         'uv:check',
         'uv:install-all',

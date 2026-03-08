@@ -67,7 +67,11 @@
     },
     "marketplace": {
         "title": "Marketplace",
-        "securityNote": "Click skill card to view its documentation and security information on ClawHub before installation.",
+        "zipInstallTitle": "Install from ZIP",
+        "zipInstallDesc": "Import a downloaded skill ZIP archive directly without manual extraction.",
+        "urlInstallTitle": "Install from URL",
+        "urlInstallDesc": "Paste a direct ZIP download link to install a skill quickly.",
+        "selectZip": "Select ZIP File",
         "manualInstallHint": "Network issues? You can always download skill ZIP archives from ClawHub.ai and extract them manually into \"{{path}}\".",
         "searching": "Searching ClawHub...",
         "noResults": "No skills found matching your search.",

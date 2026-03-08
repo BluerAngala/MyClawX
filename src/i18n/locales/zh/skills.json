@@ -67,7 +67,11 @@
     },
     "marketplace": {
         "title": "市场",
-        "securityNote": "安装前请点击技能卡片，在 ClawHub 上查看其文档和安全信息。",
+        "zipInstallTitle": "从 ZIP 安装",
+        "zipInstallDesc": "下载技能 ZIP 包后直接在此处导入，无需手动解压。",
+        "urlInstallTitle": "通过 URL 安装",
+        "urlInstallDesc": "粘贴技能的 ZIP 下载链接进行快速安装。",
+        "selectZip": "选择 ZIP 文件",
         "manualInstallHint": "遇到网络问题？您可以随时从 ClawHub.ai 下载技能压缩包，并将其解压至 \"{{path}}\" 目录来完成手动安装。",
         "searching": "正在搜索 ClawHub...",
         "noResults": "未找到匹配的技能。",

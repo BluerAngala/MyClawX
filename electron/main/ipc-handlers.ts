@@ -1838,6 +1838,26 @@ function registerClawHubHandlers(clawHubService: ClawHubService): void {
       return { success: false, error: String(error) };
     }
   });
+
+  // Install skill from URL
+  ipcMain.handle('clawhub:installFromUrl', async (_, url: string) => {
+    try {
+      const slug = await clawHubService.installFromUrl(url);
+      return { success: true, slug };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  });
+
+  // Install skill from local ZIP
+  ipcMain.handle('clawhub:installFromZip', async (_, zipPath: string) => {
+    try {
+      const slug = await clawHubService.installFromZip(zipPath);
+      return { success: true, slug };
+    } catch (error) {
+      return { success: false, error: String(error) };
+    }
+  });
 }
 
 /**

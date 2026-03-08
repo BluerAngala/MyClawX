@@ -47,6 +47,8 @@ interface SkillsState {
   fetchSkills: () => Promise<void>;
   searchSkills: (query: string) => Promise<void>;
   installSkill: (slug: string, version?: string) => Promise<void>;
+  installSkillFromZip: (zipPath: string) => Promise<string>;
+  installSkillFromUrl: (url: string) => Promise<string>;
   uninstallSkill: (slug: string) => Promise<void>;
   enableSkill: (skillId: string) => Promise<void>;
   disableSkill: (skillId: string) => Promise<void>;
@@ -198,6 +200,40 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
         delete newInstalling[slug];
         return { installing: newInstalling };
       });
+    }
+  },
+
+  installSkillFromZip: async (zipPath: string) => {
+    set({ loading: true, error: null });
+    try {
+      const result = await window.electron.ipcRenderer.invoke('clawhub:installFromZip', zipPath) as { success: boolean; slug?: string; error?: string };
+      if (!result.success || !result.slug) {
+        throw new Error(result.error || 'Install from ZIP failed');
+      }
+      await get().fetchSkills();
+      return result.slug;
+    } catch (error) {
+      console.error('Install from ZIP error:', error);
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  installSkillFromUrl: async (url: string) => {
+    set({ loading: true, error: null });
+    try {
+      const result = await window.electron.ipcRenderer.invoke('clawhub:installFromUrl', url) as { success: boolean; slug?: string; error?: string };
+      if (!result.success || !result.slug) {
+        throw new Error(result.error || 'Install from URL failed');
+      }
+      await get().fetchSkills();
+      return result.slug;
+    } catch (error) {
+      console.error('Install from URL error:', error);
+      throw error;
+    } finally {
+      set({ loading: false });
     }
   },
 
