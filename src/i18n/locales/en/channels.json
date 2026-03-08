@@ -1,22 +1,22 @@
 {
-    "title": "Messaging Channels",
-    "subtitle": "Manage your messaging channels and connections",
+    "title": "Integrations",
+    "subtitle": "Manage your integrations and connections",
     "refresh": "Refresh",
-    "addChannel": "Add Channel",
+    "addChannel": "Add Integration",
     "stats": {
-        "total": "Total Channels",
+        "total": "Total Integrations",
         "connected": "Connected",
         "disconnected": "Disconnected"
     },
-    "gatewayWarning": "Gateway service is not running. Channels cannot connect.",
-    "available": "Available Channels",
-    "availableDesc": "Connect a new channel",
+    "gatewayWarning": "Gateway service is not running. Integrations cannot connect.",
+    "available": "Available Integrations",
+    "availableDesc": "Connect a new integration",
     "showAll": "Show All",
     "pluginBadge": "Plugin",
     "toast": {
         "whatsappConnected": "WhatsApp connected successfully",
         "whatsappFailed": "WhatsApp connection failed: {{error}}",
-        "channelSaved": "Channel {{name}} saved",
+        "channelSaved": "Integration {{name}} saved",
         "channelConnecting": "Connecting to {{name}}...",
         "restartManual": "Please restart the gateway manually",
         "configFailed": "Configuration failed: {{error}}"
@@ -24,18 +24,18 @@
     "dialog": {
         "updateTitle": "Update {{name}}",
         "configureTitle": "Configure {{name}}",
-        "addTitle": "Add Channel",
+        "addTitle": "Add Integration",
         "existingDesc": "Update your existing configuration",
-        "selectDesc": "Select a channel type to configure",
+        "selectDesc": "Select an integration type to configure",
         "qrCode": "QRCode",
         "token": "Token",
         "scanQR": "Scan this QR code with {{name}}",
         "refreshCode": "Refresh Code",
         "loadingConfig": "Loading configuration...",
-        "existingHint": "You have an existing configuration for this channel",
+        "existingHint": "You have an existing configuration for this integration",
         "howToConnect": "How to connect",
         "viewDocs": "View Documentation",
-        "channelName": "Channel Name",
+        "channelName": "Integration Name",
         "channelNamePlaceholder": "My {{name}}",
         "credentialsVerified": "Credentials Verified",
         "validationFailed": "Validation Failed",
@@ -272,7 +272,7 @@
                 "Download the JSON key file"
             ]
         },
-        "mattermost": {
+"mattermost": {
             "description": "Connect Mattermost via Bot API",
             "docsUrl": "https://docs.openclaw.ai/channels/mattermost",
             "fields": {
@@ -290,7 +290,75 @@
                 "Create a new Bot Account",
                 "Copy the access token"
             ]
+        },
+        "wechat-miniprogram": {
+            "description": "Connect personal WeChat via ClawChat MiniProgram",
+            "docsUrl": "https://github.com/hillghost86/OpenClawWeChat",
+            "fields": {
+                "apiKey": {
+                    "label": "API Key",
+                    "placeholder": "bot_id:secret",
+                    "description": "Get API Key from WeChat MiniProgram 'ClawChat'"
+                }
+            },
+            "instructions": [
+                "Open WeChat and search MiniProgram 'ClawChat'",
+                "Copy API Key from 'Me' → 'APIKey Management'",
+                "Install plugin: openclaw plugins install openclawwechat",
+                "Run config: cd ~/.openclaw/extensions/openclawwechat && npm run config-init"
+            ]
+        },
+"wecom": {
+            "description": "Connect WeCom (Enterprise WeChat) - supports Agent mode and Bot mode",
+            "docsUrl": "https://github.com/dingxiang-me/OpenClaw-Wechat",
+            "fields": {
+                "corpId": {
+                    "label": "Corp ID",
+                    "placeholder": "wwxxxx"
+                },
+                "corpSecret": {
+                    "label": "App Secret",
+                    "placeholder": "Your app secret"
+                },
+                "agentId": {
+                    "label": "Agent ID",
+                    "placeholder": "1000004"
+                },
+                "callbackToken": {
+                    "label": "Callback Token",
+                    "placeholder": "Random string"
+                },
+                "callbackAesKey": {
+                    "label": "Callback AES Key",
+                    "placeholder": "EncodingAESKey from WeCom"
+                }
+            },
+            "instructions": [
+                "Create an internal app in WeCom admin console",
+                "Get CorpId from 'My Company' page",
+                "Get AgentId and Secret from app details",
+                "Configure message receiving: set URL, Token, EncodingAESKey",
+                "Install plugin: git clone https://github.com/dingxiang-me/OpenClaw-Wechat.git"
+            ]
         }
+    },
+    "customChannel": {
+        "title": "Custom Integration",
+        "description": "Add a custom integration not in the preset list",
+        "icon": "Icon",
+        "channelId": "Channel ID",
+        "channelIdDesc": "Unique identifier string, e.g. my-telegram-bot",
+        "configFields": "Configuration Fields",
+        "addField": "Add Field",
+        "fieldKey": "Field Name",
+        "fieldValue": "Field Value",
+        "markSecret": "Mark as sensitive",
+        "unmarkSecret": "Unmark as sensitive",
+        "showValue": "Show value",
+        "hideValue": "Hide value",
+        "fieldsDesc": "Add key-value pairs for configuration, e.g. token, webhookUrl, etc.",
+        "idRequired": "Please enter a channel ID",
+        "nameRequired": "Please enter a channel name"
     },
     "viewDocs": "View Documentation"
 }

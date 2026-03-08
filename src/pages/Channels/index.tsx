@@ -1,8 +1,4 @@
-/**
- * Channels Page
- * Manage messaging channel connections with configuration UI
- */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Radio,
@@ -21,6 +17,7 @@ import {
   AlertCircle,
   CheckCircle,
   ShieldCheck,
+  Lock as LockIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,17 +49,12 @@ export function Channels() {
   const gatewayStatus = useGatewayStore((state) => state.status);
 
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [selectedChannelType, setSelectedChannelType] = useState<ChannelType | null>(null);
   const [configuredTypes, setConfiguredTypes] = useState<string[]>([]);
   const [channelToDelete, setChannelToDelete] = useState<{ id: string } | null>(null);
 
-  // Fetch channels on mount
-  useEffect(() => {
-    fetchChannels();
-  }, [fetchChannels]);
-
-  // Fetch configured channel types from config file
-  const fetchConfiguredTypes = useCallback(async () => {
+  const refreshConfiguredTypes = async () => {
     try {
       const result = await window.electron.ipcRenderer.invoke('channel:listConfigured') as {
         success: boolean;
@@ -74,29 +66,42 @@ export function Channels() {
     } catch {
       // ignore
     }
-  }, []);
+  };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchConfiguredTypes();
-  }, [fetchConfiguredTypes]);
+    fetchChannels();
+  }, [fetchChannels]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const result = await window.electron.ipcRenderer.invoke('channel:listConfigured') as {
+          success: boolean;
+          channels?: string[];
+        };
+        if (result.success && result.channels) {
+          setConfiguredTypes(result.channels);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    void load();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = window.electron.ipcRenderer.on('gateway:channel-status', () => {
       fetchChannels();
-      fetchConfiguredTypes();
+      void refreshConfiguredTypes();
     });
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
     };
-  }, [fetchChannels, fetchConfiguredTypes]);
+  }, [fetchChannels]);
 
-  // Get channel types to display
   const displayedChannelTypes = getPrimaryChannels();
-
-  // Connected/disconnected channel counts
   const connectedCount = channels.filter((c) => c.status === 'connected').length;
 
   if (loading) {
@@ -109,7 +114,6 @@ export function Channels() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('title')}</h1>
@@ -122,14 +126,13 @@ export function Channels() {
             <RefreshCw className="h-4 w-4 mr-2" />
             {t('refresh')}
           </Button>
-          <Button onClick={() => setShowAddDialog(true)}>
+          <Button onClick={() => setShowCustomDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             {t('addChannel')}
           </Button>
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -172,7 +175,6 @@ export function Channels() {
         </Card>
       </div>
 
-      {/* Gateway Warning */}
       {gatewayStatus.state !== 'running' && (
         <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
           <CardContent className="py-4 flex items-center gap-3">
@@ -184,7 +186,6 @@ export function Channels() {
         </Card>
       )}
 
-      {/* Error Display */}
       {error && (
         <Card className="border-destructive">
           <CardContent className="py-4 text-destructive">
@@ -193,7 +194,6 @@ export function Channels() {
         </Card>
       )}
 
-      {/* Configured Channels */}
       {channels.length > 0 && (
         <Card>
           <CardHeader>
@@ -214,7 +214,6 @@ export function Channels() {
         </Card>
       )}
 
-      {/* Available Channels */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -258,11 +257,20 @@ export function Channels() {
                 </button>
               );
             })}
+            <button
+              className="p-4 rounded-lg border border-dashed hover:bg-accent transition-colors text-left relative"
+              onClick={() => setShowCustomDialog(true)}
+            >
+              <span className="text-3xl">➕</span>
+              <p className="font-medium mt-2">{t('customChannel.title')}</p>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {t('customChannel.description')}
+              </p>
+            </button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Add Channel Dialog */}
       {showAddDialog && (
         <AddChannelDialog
           selectedType={selectedChannelType}
@@ -273,7 +281,7 @@ export function Channels() {
           }}
           onChannelAdded={() => {
             fetchChannels();
-            fetchConfiguredTypes();
+            void refreshConfiguredTypes();
             setShowAddDialog(false);
             setSelectedChannelType(null);
           }}
@@ -295,11 +303,20 @@ export function Channels() {
         }}
         onCancel={() => setChannelToDelete(null)}
       />
+
+      {showCustomDialog && (
+        <CustomChannelDialog
+          onClose={() => setShowCustomDialog(false)}
+          onChannelAdded={() => {
+            fetchChannels();
+            void refreshConfiguredTypes();
+            setShowCustomDialog(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-
-// ==================== Channel Card Component ====================
 
 interface ChannelCardProps {
   channel: Channel;
@@ -344,8 +361,6 @@ function ChannelCard({ channel, onDelete }: ChannelCardProps) {
   );
 }
 
-// ==================== Add Channel Dialog ====================
-
 interface AddChannelDialogProps {
   selectedType: ChannelType | null;
   onSelectType: (type: ChannelType | null) => void;
@@ -373,15 +388,11 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
 
   const meta: ChannelMeta | null = selectedType ? CHANNEL_META[selectedType] : null;
 
-  // Load existing config when a channel type is selected
   useEffect(() => {
     if (!selectedType) {
       setConfigValues({});
       setChannelName('');
       setIsExistingConfig(false);
-      setChannelName('');
-      setIsExistingConfig(false);
-      // Ensure we clean up any pending QR session if switching away
       window.electron.ipcRenderer.invoke('channel:cancelWhatsAppQr').catch(() => { });
       return;
     }
@@ -418,14 +429,12 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
     return () => { cancelled = true; };
   }, [selectedType]);
 
-  // Focus first input when form is ready (avoids Windows focus loss after native dialogs)
   useEffect(() => {
     if (selectedType && !loadingConfig && firstInputRef.current) {
       firstInputRef.current.focus();
     }
   }, [selectedType, loadingConfig]);
 
-  // Listen for WhatsApp QR events
   useEffect(() => {
     if (selectedType !== 'whatsapp') return;
 
@@ -452,12 +461,10 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
       } catch (error) {
         console.error('Failed to save WhatsApp config:', error);
       }
-      // Register the channel locally so it shows up immediately
       addChannel({
         type: 'whatsapp',
         name: channelName || 'WhatsApp',
       }).then(() => {
-        // Restart gateway to pick up the new session
         window.electron.ipcRenderer.invoke('gateway:restart').catch(console.error);
         onChannelAdded();
       });
@@ -479,7 +486,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
       if (typeof removeQrListener === 'function') removeQrListener();
       if (typeof removeSuccessListener === 'function') removeSuccessListener();
       if (typeof removeErrorListener === 'function') removeErrorListener();
-      // Cancel when unmounting or switching types
       window.electron.ipcRenderer.invoke('channel:cancelWhatsAppQr').catch(() => { });
     };
   }, [selectedType, addChannel, channelName, onChannelAdded, t]);
@@ -535,15 +541,12 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
     setValidationResult(null);
 
     try {
-      // For QR-based channels, request QR code
       if (meta.connectionType === 'qr') {
         const accountId = channelName.trim() || 'default';
         await window.electron.ipcRenderer.invoke('channel:requestWhatsAppQr', accountId);
-        // The QR code will be set via event listener
         return;
       }
 
-      // Step 1: Validate credentials against the actual service API
       if (meta.connectionType === 'token') {
         const validationResponse = await window.electron.ipcRenderer.invoke(
           'channel:validateCredentials',
@@ -567,7 +570,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
           return;
         }
 
-        // Show success details (bot name, guild name, etc.) as warnings/info
         const warnings = validationResponse.warnings || [];
         if (validationResponse.details) {
           const details = validationResponse.details;
@@ -582,7 +584,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
           }
         }
 
-        // Show validation success with details
         setValidationResult({
           valid: true,
           errors: [],
@@ -590,7 +591,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
         });
       }
 
-      // Step 2: Save channel configuration via IPC
       const config: Record<string, unknown> = { ...configValues };
       const saveResult = await window.electron.ipcRenderer.invoke('channel:saveConfig', selectedType, config) as {
         success?: boolean;
@@ -605,7 +605,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
         toast.warning(saveResult.warning);
       }
 
-      // Step 3: Add a local channel entry for the UI
       await addChannel({
         type: selectedType,
         name: channelName || CHANNEL_NAMES[selectedType],
@@ -614,14 +613,8 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
 
       toast.success(t('toast.channelSaved', { name: meta.name }));
 
-      // Gateway restart is now handled server-side via debouncedRestart()
-      // inside the channel:saveConfig IPC handler, so we don't need to
-      // trigger it explicitly here.  This avoids cascading restarts when
-      // multiple config changes happen in quick succession (e.g. during
-      // the setup wizard).
       toast.success(t('toast.channelConnecting', { name: meta.name }));
 
-      // Brief delay so user can see the success state before dialog closes
       await new Promise((resolve) => setTimeout(resolve, 800));
       onChannelAdded();
     } catch (error) {
@@ -637,12 +630,10 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
         if (window.electron?.openExternal) {
           window.electron.openExternal(url);
         } else {
-          // Fallback: open in new window
           window.open(url, '_blank');
         }
       } catch (error) {
         console.error('Failed to open docs:', error);
-        // Fallback: open in new window
         window.open(url, '_blank');
       }
     }
@@ -652,7 +643,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
   const isFormValid = () => {
     if (!meta) return false;
 
-    // Check all required fields are filled
     return meta.configFields
       .filter((field) => field.required)
       .every((field) => configValues[field.key]?.trim());
@@ -690,7 +680,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
         </CardHeader>
         <CardContent className="space-y-4">
           {!selectedType ? (
-            // Channel type selection
             <div className="grid grid-cols-2 gap-4">
               {getPrimaryChannels().map((type) => {
                 const channelMeta = CHANNEL_META[type];
@@ -710,7 +699,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
               })}
             </div>
           ) : qrCode ? (
-            // QR Code display
             <div className="text-center space-y-4">
               <div className="bg-white p-4 rounded-lg inline-block shadow-sm border">
                 {qrCode.startsWith('data:image') ? (
@@ -727,22 +715,19 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => {
                   setQrCode(null);
-                  handleConnect(); // Retry
+                  handleConnect();
                 }}>
                   {t('dialog.refreshCode')}
                 </Button>
               </div>
             </div>
           ) : loadingConfig ? (
-            // Loading saved config
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               <span className="ml-2 text-sm text-muted-foreground">{t('dialog.loadingConfig')}</span>
             </div>
           ) : (
-            // Connection form
             <div className="space-y-4">
-              {/* Existing config hint */}
               {isExistingConfig && (
                 <div className="bg-blue-500/10 text-blue-600 dark:text-blue-400 p-3 rounded-lg text-sm flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 shrink-0" />
@@ -750,7 +735,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
                 </div>
               )}
 
-              {/* Instructions */}
               <div className="bg-muted p-4 rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-sm">{t('dialog.howToConnect')}</p>
@@ -771,7 +755,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
                 </ol>
               </div>
 
-              {/* Channel name */}
               <div className="space-y-2">
                 <Label htmlFor="name">{t('dialog.channelName')}</Label>
                 <Input
@@ -783,7 +766,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
                 />
               </div>
 
-              {/* Configuration fields */}
               {meta?.configFields.map((field) => (
                 <ConfigField
                   key={field.key}
@@ -795,7 +777,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
                 />
               ))}
 
-              {/* Validation Results */}
               {validationResult && (
                 <div className={`p-4 rounded-lg text-sm ${validationResult.valid ? 'bg-green-500/10 text-green-600 dark:text-green-400' : 'bg-destructive/10 text-destructive'
                   }`}>
@@ -845,7 +826,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
                   {t('dialog.back')}
                 </Button>
                 <div className="flex gap-2">
-                  {/* Validation Button - Only for token-based channels for now */}
                   {meta?.connectionType === 'token' && (
                     <Button
                       variant="secondary"
@@ -892,8 +872,6 @@ function AddChannelDialog({ selectedType, onSelectType, onClose, onChannelAdded 
     </div >
   );
 }
-
-// ==================== Config Field Component ====================
 
 interface ConfigFieldProps {
   field: ChannelConfigField;
@@ -943,6 +921,269 @@ function ConfigField({ field, value, onChange, showSecret, onToggleSecret }: Con
           {t('dialog.envVar', { var: field.envVar })}
         </p>
       )}
+    </div>
+  );
+}
+
+interface CustomChannelDialogProps {
+  onClose: () => void;
+  onChannelAdded: () => void;
+}
+
+interface CustomField {
+  key: string;
+  value: string;
+  isSecret: boolean;
+}
+
+function CustomChannelDialog({ onClose, onChannelAdded }: CustomChannelDialogProps) {
+  const { t } = useTranslation('channels');
+  const { addChannel } = useChannelsStore();
+  const [channelId, setChannelId] = useState('');
+  const [channelName, setChannelName] = useState('');
+  const [icon, setIcon] = useState('🔌');
+  const [fields, setFields] = useState<CustomField[]>([
+    { key: '', value: '', isSecret: false },
+  ]);
+  const [saving, setSaving] = useState(false);
+  const [visibleFields, setVisibleFields] = useState<Set<number>>(new Set());
+
+  const handleAddField = () => {
+    setFields([...fields, { key: '', value: '', isSecret: false }]);
+  };
+
+  const handleRemoveField = (index: number) => {
+    if (fields.length > 1) {
+      setFields(fields.filter((_, i) => i !== index));
+      setVisibleFields((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }
+  };
+
+  const handleFieldChange = (index: number, keyOrValue: 'key' | 'value', value: string) => {
+    const newFields = [...fields];
+    if (keyOrValue === 'key') {
+      newFields[index] = { ...newFields[index], key: value };
+    } else {
+      newFields[index] = { ...newFields[index], value: value };
+    }
+    setFields(newFields);
+  };
+
+  const handleFieldSecretToggle = (index: number) => {
+    const newFields = [...fields];
+    newFields[index] = { ...newFields[index], isSecret: !newFields[index].isSecret };
+    setFields(newFields);
+  };
+
+  const toggleFieldVisibility = (index: number) => {
+    setVisibleFields((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSave = async () => {
+    const trimmedId = channelId.trim();
+    const trimmedName = channelName.trim();
+
+    if (!trimmedId) {
+      toast.error(t('customChannel.idRequired'));
+      return;
+    }
+
+    if (!trimmedName) {
+      toast.error(t('customChannel.nameRequired'));
+      return;
+    }
+
+    const config: Record<string, string> = {};
+    for (const field of fields) {
+      if (field.key.trim()) {
+        config[field.key.trim()] = field.value;
+      }
+    }
+
+    setSaving(true);
+
+    try {
+      const result = await window.electron.ipcRenderer.invoke(
+        'channel:saveConfig',
+        `custom-${trimmedId}`,
+        {
+          enabled: true,
+          name: trimmedName,
+          icon,
+          ...config,
+        }
+      ) as { success?: boolean; error?: string };
+
+      if (result.success) {
+        await addChannel({
+          type: 'telegram' as ChannelType,
+          name: trimmedName,
+        });
+        toast.success(t('toast.channelSaved', { name: trimmedName }));
+        onChannelAdded();
+      } else {
+        toast.error(result.error || t('toast.configFailed'));
+      }
+    } catch (error) {
+      toast.error(`${t('toast.configFailed')}: ${String(error)}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const emojiIcons = ['🔌', '🤖', '📧', '💬', '📱', '🌐', '🔗', '📡', '🛠️', '⚙️', '🎯', '💡'];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{t('customChannel.title')}</CardTitle>
+              <CardDescription>{t('customChannel.description')}</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>{t('customChannel.icon')}</Label>
+            <div className="flex flex-wrap gap-2">
+              {emojiIcons.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className={`w-10 h-10 rounded-lg border text-xl flex items-center justify-center transition-colors ${icon === emoji ? 'border-primary bg-primary/10' : 'hover:bg-accent'}`}
+                  onClick={() => setIcon(emoji)}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customChannelId">{t('customChannel.channelId')}</Label>
+            <Input
+              id="customChannelId"
+              value={channelId}
+              onChange={(e) => setChannelId(e.target.value)}
+              placeholder="my-custom-channel"
+            />
+            <p className="text-xs text-muted-foreground">
+              {t('customChannel.channelIdDesc')}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="customChannelName">{t('dialog.channelName')}</Label>
+            <Input
+              id="customChannelName"
+              value={channelName}
+              onChange={(e) => setChannelName(e.target.value)}
+              placeholder={t('dialog.channelNamePlaceholder', { name: channelId || 'Channel' })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>{t('customChannel.configFields')}</Label>
+              <Button variant="outline" size="sm" onClick={handleAddField}>
+                <Plus className="h-4 w-4 mr-1" />
+                {t('customChannel.addField')}
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {fields.map((field, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <div className="flex-1 space-y-1">
+                    <Input
+                      placeholder={t('customChannel.fieldKey')}
+                      value={field.key}
+                      onChange={(e) => handleFieldChange(index, 'key', e.target.value)}
+                      className="h-8"
+                    />
+                    <div className="flex gap-1">
+                      <Input
+                        type={field.isSecret && !visibleFields.has(index) ? 'password' : 'text'}
+                        placeholder={t('customChannel.fieldValue')}
+                        value={field.value}
+                        onChange={(e) => handleFieldChange(index, 'value', e.target.value)}
+                        className="h-8 flex-1"
+                      />
+                      {field.isSecret && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => toggleFieldVisibility(index)}
+                          title={visibleFields.has(index) ? t('customChannel.hideValue') : t('customChannel.showValue')}
+                        >
+                          {visibleFields.has(index) ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleFieldSecretToggle(index)}
+                        title={field.isSecret ? t('customChannel.unmarkSecret') : t('customChannel.markSecret')}
+                      >
+                        <LockIcon className={`h-3 w-3 ${field.isSecret ? 'text-primary' : 'text-muted-foreground'}`} />
+                      </Button>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive mt-0.5"
+                    onClick={() => handleRemoveField(index)}
+                    disabled={fields.length === 1}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t('customChannel.fieldsDesc')}
+            </p>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={onClose}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {t('common.saving', 'Saving...')}
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  {t('dialog.saveAndConnect')}
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

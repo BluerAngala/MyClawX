@@ -18,7 +18,9 @@ export type ChannelType =
   | 'line'
   | 'msteams'
   | 'googlechat'
-  | 'mattermost';
+  | 'mattermost'
+  | 'wechat-miniprogram'
+  | 'wecom';
 
 /**
  * Channel connection status
@@ -90,6 +92,8 @@ export const CHANNEL_ICONS: Record<ChannelType, string> = {
   msteams: '👔',
   googlechat: '💭',
   mattermost: '💠',
+  'wechat-miniprogram': '💚',
+  wecom: '💚',
 };
 
 /**
@@ -97,26 +101,28 @@ export const CHANNEL_ICONS: Record<ChannelType, string> = {
  */
 export const CHANNEL_NAMES: Record<ChannelType, string> = {
   whatsapp: 'WhatsApp',
-  dingtalk: 'DingTalk',
+  dingtalk: '钉钉',
   telegram: 'Telegram',
   discord: 'Discord',
   signal: 'Signal',
-  feishu: 'Feishu / Lark',
+  feishu: '飞书 / Lark',
   imessage: 'iMessage',
   matrix: 'Matrix',
   line: 'LINE',
   msteams: 'Microsoft Teams',
   googlechat: 'Google Chat',
   mattermost: 'Mattermost',
+  'wechat-miniprogram': '微信小程序',
+  wecom: '企业微信',
 };
 
 /**
  * Channel metadata with configuration information
  */
 export const CHANNEL_META: Record<ChannelType, ChannelMeta> = {
-  dingtalk: {
+dingtalk: {
     id: 'dingtalk',
-    name: 'DingTalk',
+    name: '钉钉',
     icon: '💬',
     description: 'channels:meta.dingtalk.description',
     connectionType: 'token',
@@ -279,9 +285,9 @@ export const CHANNEL_META: Record<ChannelType, ChannelMeta> = {
       'channels:meta.signal.instructions.2',
     ],
   },
-  feishu: {
+feishu: {
     id: 'feishu',
-    name: 'Feishu / Lark',
+    name: '飞书 / Lark',
     icon: '🐦',
     description: 'channels:meta.feishu.description',
     connectionType: 'token',
@@ -460,7 +466,7 @@ export const CHANNEL_META: Record<ChannelType, ChannelMeta> = {
       'channels:meta.googlechat.instructions.3',
     ],
   },
-  mattermost: {
+mattermost: {
     id: 'mattermost',
     name: 'Mattermost',
     icon: '💠',
@@ -490,13 +496,91 @@ export const CHANNEL_META: Record<ChannelType, ChannelMeta> = {
     ],
     isPlugin: true,
   },
+  'wechat-miniprogram': {
+    id: 'wechat-miniprogram',
+    name: '微信小程序',
+    icon: '💚',
+    description: 'channels:meta.wechat-miniprogram.description',
+    connectionType: 'token',
+    docsUrl: 'channels:meta.wechat-miniprogram.docsUrl',
+    configFields: [
+      {
+        key: 'apiKey',
+        label: 'channels:meta.wechat-miniprogram.fields.apiKey.label',
+        type: 'password',
+        placeholder: 'channels:meta.wechat-miniprogram.fields.apiKey.placeholder',
+        required: true,
+        description: 'channels:meta.wechat-miniprogram.fields.apiKey.description',
+      },
+    ],
+    instructions: [
+      'channels:meta.wechat-miniprogram.instructions.0',
+      'channels:meta.wechat-miniprogram.instructions.1',
+      'channels:meta.wechat-miniprogram.instructions.2',
+      'channels:meta.wechat-miniprogram.instructions.3',
+    ],
+    isPlugin: true,
+  },
+  wecom: {
+    id: 'wecom',
+    name: '企业微信',
+    icon: '💚',
+    description: 'channels:meta.wecom.description',
+    connectionType: 'token',
+    docsUrl: 'channels:meta.wecom.docsUrl',
+    configFields: [
+      {
+        key: 'corpId',
+        label: 'channels:meta.wecom.fields.corpId.label',
+        type: 'text',
+        placeholder: 'channels:meta.wecom.fields.corpId.placeholder',
+        required: true,
+      },
+      {
+        key: 'corpSecret',
+        label: 'channels:meta.wecom.fields.corpSecret.label',
+        type: 'password',
+        placeholder: 'channels:meta.wecom.fields.corpSecret.placeholder',
+        required: true,
+      },
+      {
+        key: 'agentId',
+        label: 'channels:meta.wecom.fields.agentId.label',
+        type: 'text',
+        placeholder: 'channels:meta.wecom.fields.agentId.placeholder',
+        required: true,
+      },
+      {
+        key: 'callbackToken',
+        label: 'channels:meta.wecom.fields.callbackToken.label',
+        type: 'password',
+        placeholder: 'channels:meta.wecom.fields.callbackToken.placeholder',
+        required: true,
+      },
+      {
+        key: 'callbackAesKey',
+        label: 'channels:meta.wecom.fields.callbackAesKey.label',
+        type: 'password',
+        placeholder: 'channels:meta.wecom.fields.callbackAesKey.placeholder',
+        required: true,
+      },
+    ],
+    instructions: [
+      'channels:meta.wecom.instructions.0',
+      'channels:meta.wecom.instructions.1',
+      'channels:meta.wecom.instructions.2',
+      'channels:meta.wecom.instructions.3',
+      'channels:meta.wecom.instructions.4',
+    ],
+    isPlugin: true,
+  },
 };
 
 /**
  * Get primary supported channels (non-plugin, commonly used)
  */
 export function getPrimaryChannels(): ChannelType[] {
-  return ['telegram', 'discord', 'whatsapp', 'dingtalk', 'feishu'];
+  return ['telegram', 'discord', 'whatsapp', 'wechat-miniprogram', 'wecom', 'dingtalk', 'feishu'];
 }
 
 /**

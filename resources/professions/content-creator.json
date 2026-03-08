@@ -6,7 +6,7 @@
   "descriptionZh": "自动化内容创作和社交媒体发布",
   "icon": "✍️",
   "color": "rose",
-  "difficulty": "beginner",
+  "tag": "popular",
   "estimatedSetupTime": 5,
   "commonSkills": ["web-browse", "summarize"],
   "scenes": [

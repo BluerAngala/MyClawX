@@ -29,7 +29,8 @@
         "back": "Back",
         "next": "Next",
         "skip": "Skip",
-        "restart": "Restart"
+        "restart": "Restart",
+        "retry": "Retry"
     },
     "status": {
         "running": "Running",
@@ -43,7 +44,8 @@
         "paused": "Paused",
         "configured": "Configured",
         "loading": "Loading...",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "connecting": "Connecting..."
     },
     "gateway": {
         "notRunning": "Gateway Not Running",

@@ -20,6 +20,7 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
   const [step, setStep] = useState<Step>('select-profession');
   const [selectedProfession, setSelectedProfession] = useState<Profession | null>(null);
   const [selectedScene, setSelectedScene] = useState<ProfessionScene | null>(null);
+  const [selectedSkillSlugs, setSelectedSkillSlugs] = useState<string[]>([]);
 
   const {
     professions,
@@ -39,16 +40,26 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
   const handleSelectScene = (scene: ProfessionScene) => {
     setSelectedScene(scene);
+    setSelectedSkillSlugs(scene.skills.map(s => s.slug));
     setStep('confirm');
   };
 
   const handleApply = async () => {
     if (!selectedProfession || !selectedScene) return;
 
-    const result = await applyScene(selectedProfession.id, selectedScene.id);
+    const result = await applyScene(selectedProfession.id, selectedScene.id, selectedSkillSlugs);
     if (result.success) {
       onComplete?.();
     }
+  };
+
+  const toggleSkill = (slug: string) => {
+    const skill = selectedScene?.skills.find(s => s.slug === slug);
+    if (skill?.required) return; // Cannot toggle required skills
+
+    setSelectedSkillSlugs(prev => 
+      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    );
   };
 
   const handleBack = () => {
@@ -61,29 +72,25 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
     }
   };
 
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner':
-        return '入门';
-      case 'intermediate':
-        return '中级';
-      case 'advanced':
-        return '高级';
+  const getTagLabel = (tag?: string) => {
+    switch (tag) {
+      case 'popular':
+        return '热门';
+      case 'new':
+        return '新上线';
       default:
-        return difficulty;
+        return '';
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner':
-        return 'bg-green-100 text-green-700';
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'advanced':
-        return 'bg-red-100 text-red-700';
+  const getTagColor = (tag?: string) => {
+    switch (tag) {
+      case 'popular':
+        return 'bg-orange-100 text-orange-700';
+      case 'new':
+        return 'bg-blue-100 text-blue-700';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return '';
     }
   };
 
@@ -134,37 +141,44 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
           <>
             {/* Step 1: Select Profession */}
             {step === 'select-profession' && (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 {professions.map((profession) => (
                   <Card
                     key={profession.id}
-                    className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+                    className="group relative flex flex-col overflow-hidden border-none bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-2xl hover:-translate-y-1"
                     onClick={() => handleSelectProfession(profession)}
                   >
-                    <CardHeader className="pb-3">
+                    <div className={`absolute inset-0 opacity-5 bg-gradient-to-br from-${profession.color}-500 to-transparent transition-opacity group-hover:opacity-10`} />
+                    <CardHeader className="pb-3 relative z-10">
                       <div className="flex items-start justify-between">
-                        <span className="text-4xl">{profession.icon}</span>
-                        <Badge className={getDifficultyColor(profession.difficulty)}>
-                          {getDifficultyLabel(profession.difficulty)}
-                        </Badge>
+                        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-${profession.color}-500/10 text-4xl transition-transform group-hover:scale-110 group-hover:rotate-3`}>
+                          {profession.icon}
+                        </div>
+                        {profession.tag && (
+                          <Badge className={`${getTagColor(profession.tag)} border-none px-3 py-1 text-[10px] font-bold uppercase tracking-widest`}>
+                            {getTagLabel(profession.tag)}
+                          </Badge>
+                        )}
                       </div>
-                      <CardTitle className="mt-2">{profession.nameZh}</CardTitle>
-                      <CardDescription>{profession.descriptionZh}</CardDescription>
+                      <CardTitle className="mt-4 text-xl font-bold tracking-tight">{profession.nameZh}</CardTitle>
+                      <CardDescription className="line-clamp-2 text-sm leading-relaxed">
+                        {profession.descriptionZh}
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          <span>{profession.estimatedSetupTime}分钟设置</span>
+                    <CardContent className="mt-auto relative z-10">
+                      <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground/70">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{profession.estimatedSetupTime} min</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Zap className="h-4 w-4" />
-                          <span>{profession.scenes.length}个场景</span>
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                          <span>{profession.scenes.length} scenes</span>
                         </div>
                       </div>
-                      <Button className="mt-4 w-full" variant="secondary">
-                        选择
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                      <Button className="mt-6 w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all" variant="secondary">
+                        开始配置
+                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                       </Button>
                     </CardContent>
                   </Card>
@@ -174,53 +188,76 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
             {/* Step 2: Select Scene */}
             {step === 'select-scene' && selectedProfession && (
-              <div className="space-y-4">
-                <Button variant="ghost" onClick={handleBack} className="mb-4">
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <Button variant="ghost" onClick={handleBack} className="mb-2 hover:bg-transparent hover:text-primary">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   返回职业选择
                 </Button>
 
-                <div className="grid gap-4">
+                <div className="grid gap-6">
                   {selectedProfession.scenes.map((scene) => (
                     <Card
                       key={scene.id}
-                      className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
+                      className="group cursor-pointer border-none bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-xl"
                       onClick={() => handleSelectScene(scene)}
                     >
-                      <CardHeader>
-                        <div className="flex items-start gap-4">
-                          <span className="text-3xl">{scene.icon}</span>
-                          <div className="flex-1">
-                            <CardTitle>{scene.nameZh}</CardTitle>
-                            <CardDescription className="mt-1">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start gap-6">
+                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-4xl transition-transform group-hover:scale-105">
+                            {scene.icon}
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <CardTitle className="text-xl font-bold">{scene.nameZh}</CardTitle>
+                            <CardDescription className="text-sm leading-relaxed">
                               {scene.descriptionZh}
                             </CardDescription>
+                            <div className="pt-2 flex flex-wrap gap-2">
+                              {scene.skills.slice(0, 3).map((skill) => (
+                                <Badge key={skill.slug} variant="outline" className="text-[10px] opacity-70">
+                                  {skill.slug}
+                                </Badge>
+                              ))}
+                              {scene.skills.length > 3 && (
+                                <Badge variant="outline" className="text-[10px] opacity-70">
+                                  +{scene.skills.length - 3}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <Button variant="secondary">
-                            选择此场景
-                            <ArrowRight className="ml-2 h-4 w-4" />
+                          <Button variant="secondary" className="group-hover:bg-primary group-hover:text-primary-foreground">
+                            配置此场景
+                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                           </Button>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-3">
-                          <div>
-                            <p className="mb-2 text-sm font-medium">使用场景：</p>
-                            <ul className="space-y-1">
+                        <div className="grid gap-6 md:grid-cols-2">
+                          <div className="space-y-3">
+                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
+                              <Sparkles className="h-3 w-3 text-primary" />
+                              典型使用场景
+                            </p>
+                            <ul className="space-y-2">
                               {scene.useCasesZh.map((useCase, index) => (
-                                <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                  <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                                <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground/90">
+                                  <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/50" />
                                   {useCase}
                                 </li>
                               ))}
                             </ul>
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {scene.skills.map((skill) => (
-                              <Badge key={skill.slug} variant={skill.required ? 'default' : 'outline'}>
-                                {skill.required ? '必需' : '可选'}: {skill.slug}
-                              </Badge>
-                            ))}
+                          <div className="space-y-3">
+                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
+                              <Zap className="h-3 w-3 text-yellow-500" />
+                              包含 AI 能力
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {scene.promptTemplates.map((template) => (
+                                <Badge key={template.id} variant="secondary" className="bg-primary/5 text-primary border-none">
+                                  {template.nameZh}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -232,55 +269,103 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
             {/* Step 3: Confirm */}
             {step === 'confirm' && selectedProfession && selectedScene && (
-              <div className="space-y-4">
-                <Button variant="ghost" onClick={handleBack} className="mb-4">
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <Button variant="ghost" onClick={handleBack} className="mb-2 hover:bg-transparent hover:text-primary">
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   返回场景选择
                 </Button>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>配置预览</CardTitle>
-                    <CardDescription>应用后将配置以下 AI 工作流</CardDescription>
+                <Card className="overflow-hidden border-none bg-card/50 backdrop-blur-sm shadow-2xl">
+                  <div className={`h-2 w-full bg-gradient-to-r from-${selectedProfession.color}-500 to-primary`} />
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-2xl font-bold">配置预览</CardTitle>
+                    <CardDescription>应用后将为您自动配置以下 AI 技能与工作流</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Profession Info */}
-                    <div className="flex items-center gap-4 rounded-lg bg-muted p-4">
-                      <span className="text-4xl">{selectedProfession.icon}</span>
-                      <div>
-                        <h3 className="font-semibold">{selectedProfession.nameZh}</h3>
-                        <p className="text-sm text-muted-foreground">{selectedProfession.descriptionZh}</p>
+                  <CardContent className="space-y-8">
+                    {/* Profession Summary */}
+                    <div className="flex items-center gap-6 rounded-2xl bg-muted/30 p-6">
+                      <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-${selectedProfession.color}-500/10 text-5xl shadow-inner`}>
+                        {selectedProfession.icon}
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-bold">{selectedProfession.nameZh}</h3>
+                        <p className="text-sm text-muted-foreground/80 leading-relaxed">
+                          {selectedProfession.descriptionZh}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Scene Info */}
-                    <div className="rounded-lg border p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-2xl">{selectedScene.icon}</span>
-                        <h4 className="font-semibold">{selectedScene.nameZh}</h4>
+                    {/* Scene Detail Card */}
+                    <div className="rounded-2xl border border-primary/10 bg-gradient-to-b from-card to-muted/10 p-8 shadow-sm">
+                      <div className="flex items-center gap-5 mb-6">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-3xl">
+                          {selectedScene.icon}
+                        </div>
+                        <div>
+                          <h4 className="text-xl font-bold">{selectedScene.nameZh}</h4>
+                          <p className="text-sm text-muted-foreground">{selectedScene.descriptionZh}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">{selectedScene.descriptionZh}</p>
 
-                      {/* Skills */}
-                      <div className="mb-4">
-                        <p className="mb-2 text-sm font-medium">包含技能：</p>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedScene.skills.map((skill) => (
-                            <Badge key={skill.slug} variant={skill.required ? 'default' : 'outline'}>
-                              {skill.description || skill.slug}
-                            </Badge>
-                          ))}
+                      {/* Skills Customization */}
+                      <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                            <Zap className="h-3 w-3 text-yellow-500" />
+                            自动化技能配置
+                          </p>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold">
+                            {selectedSkillSlugs.length} 技能已激活
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                          {selectedScene.skills.map((skill) => {
+                            const isSelected = selectedSkillSlugs.includes(skill.slug);
+                            return (
+                              <Badge
+                                key={skill.slug}
+                                variant={isSelected ? (skill.required ? 'default' : 'secondary') : 'outline'}
+                                className={`cursor-pointer px-4 py-2 text-xs transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                                  skill.required 
+                                    ? 'cursor-not-allowed shadow-md' 
+                                    : isSelected 
+                                      ? 'bg-primary/20 text-primary border-primary/20 hover:bg-primary/30' 
+                                      : 'opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0'
+                                }`}
+                                onClick={() => toggleSkill(skill.slug)}
+                              >
+                                {skill.required && <Check className="mr-1.5 h-3.5 w-3.5" />}
+                                {skill.description || skill.slug}
+                                {skill.required && <span className="ml-1.5 text-[10px] opacity-60 font-bold">(必需)</span>}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground/60 italic">
+                          <Sparkles className="h-3 w-3" />
+                          <span>点击可选技能标签可自由启用或禁用</span>
                         </div>
                       </div>
 
                       {/* Prompt Templates */}
-                      <div>
-                        <p className="mb-2 text-sm font-medium">提示词模板：</p>
-                        <div className="space-y-2">
+                      <div className="space-y-4">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80 flex items-center gap-2">
+                          <Clock className="h-3 w-3" />
+                          预设提示词模板
+                        </p>
+                        <div className="grid gap-3 sm:grid-cols-2">
                           {selectedScene.promptTemplates.map((template) => (
-                            <div key={template.id} className="rounded bg-muted p-2 text-sm">
-                              <span className="font-medium">{template.nameZh}</span>
-                              <Badge variant="outline" className="ml-2 text-xs">
+                            <div
+                              key={template.id}
+                              className="group flex items-center justify-between rounded-xl border border-transparent bg-muted/40 p-4 transition-all hover:border-primary/20 hover:bg-muted/60"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-primary/10 p-2 group-hover:bg-primary/20 transition-colors">
+                                  <Sparkles className="h-4 w-4 text-primary" />
+                                </div>
+                                <span className="text-sm font-semibold">{template.nameZh}</span>
+                              </div>
+                              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tighter opacity-50 group-hover:opacity-100 transition-opacity">
                                 {template.category}
                               </Badge>
                             </div>
@@ -290,20 +375,20 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={handleBack} className="flex-1">
+                    <div className="flex gap-4 pt-4">
+                      <Button variant="ghost" onClick={handleBack} className="flex-1 h-12 text-muted-foreground hover:bg-muted/50">
                         返回修改
                       </Button>
-                      <Button onClick={handleApply} className="flex-1" disabled={loading}>
+                      <Button onClick={handleApply} className="flex-[2] h-12 text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" disabled={loading}>
                         {loading ? (
                           <>
-                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            应用中...
+                            <div className="mr-3 h-5 w-5 animate-spin rounded-full border-3 border-current border-t-transparent" />
+                            正在为您配置...
                           </>
                         ) : (
                           <>
-                            <Check className="mr-2 h-4 w-4" />
-                            一键应用
+                            <Check className="mr-2 h-5 w-5" />
+                            立即应用并开启
                           </>
                         )}
                       </Button>

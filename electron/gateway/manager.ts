@@ -728,7 +728,7 @@ export class GatewayManager extends EventEmitter {
       } catch (error) {
         logger.error('Gateway health check error:', error);
       }
-    }, 30000); // Check every 30 seconds
+    }, 15000); // Check every 15 seconds (was 30s)
   }
 
   /**
@@ -1031,7 +1031,7 @@ export class GatewayManager extends EventEmitter {
   private async waitForPortFree(port: number, timeoutMs = 30000): Promise<void> {
     const net = await import('net');
     const start = Date.now();
-    const pollInterval = 500;
+    const pollInterval = 200; // was 500ms
     let logged = false;
 
     while (Date.now() - start < timeoutMs) {

@@ -18,13 +18,22 @@ import {
   ExternalLink,
   Trash2,
   Briefcase,
+  Loader2,
+  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settings';
 import { useChatStore } from '@/stores/chat';
+import { useGatewayStore } from '@/stores/gateway';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useTranslation } from 'react-i18next';
 
 interface NavItemProps {
@@ -71,6 +80,10 @@ export function Sidebar() {
   const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed);
   const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed);
   const devModeUnlocked = useSettingsStore((state) => state.devModeUnlocked);
+
+  const gatewayStatus = useGatewayStore((s) => s.status);
+  const startGateway = useGatewayStore((s) => s.start);
+  const restartGateway = useGatewayStore((s) => s.restart);
 
   const sessions = useChatStore((s) => s.sessions);
   const currentSessionKey = useChatStore((s) => s.currentSessionKey);
@@ -209,24 +222,103 @@ const navItems = [
       </nav>
 
       {/* Footer */}
-      <div className="p-2 space-y-2">
+      <div className="p-2 space-y-1">
+        {/* Gateway Status Indicator */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => {
+                  if (gatewayStatus.state === 'running') {
+                    // Already running, maybe show a toast or just do nothing
+                  } else if (gatewayStatus.state === 'error' || gatewayStatus.state === 'stopped') {
+                    startGateway();
+                  }
+                }}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-all',
+                  'hover:bg-accent hover:text-accent-foreground',
+                  sidebarCollapsed && 'justify-center px-2'
+                )}
+              >
+                <div className="relative">
+                  {gatewayStatus.state === 'running' ? (
+                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  ) : gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting' ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-yellow-500" />
+                  ) : gatewayStatus.state === 'error' ? (
+                    <div className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]" />
+                  ) : (
+                    <div className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                  )}
+                </div>
+
+                {!sidebarCollapsed && (
+                  <div className="flex flex-1 items-center justify-between overflow-hidden">
+                    <span className="truncate text-muted-foreground">
+                      {gatewayStatus.state === 'running'
+                        ? t('gateway.running', 'Gateway Running')
+                        : gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting'
+                        ? t('gateway.starting', 'Starting...')
+                        : gatewayStatus.state === 'error'
+                        ? t('gateway.error', 'Gateway Error')
+                        : t('gateway.stopped', 'Gateway Stopped')}
+                    </span>
+                    {gatewayStatus.state !== 'running' && (
+                      <Zap className="h-3 w-3 text-primary animate-pulse shrink-0 ml-1" />
+                    )}
+                  </div>
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={10}>
+              <div className="text-xs space-y-1">
+                <p className="font-bold">
+                  {gatewayStatus.state === 'running'
+                    ? 'Gateway is connected'
+                    : gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting'
+                    ? 'Gateway is initializing...'
+                    : 'Gateway is not running'}
+                </p>
+                {gatewayStatus.state === 'running' && (
+                  <p className="text-muted-foreground">Port: {gatewayStatus.port}</p>
+                )}
+                {(gatewayStatus.state === 'error' || gatewayStatus.state === 'stopped') && (
+                  <p className="text-primary font-medium">Click to attempt startup</p>
+                )}
+                {gatewayStatus.state === 'running' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      restartGateway();
+                    }}
+                    className="text-[10px] text-destructive hover:underline block mt-1"
+                  >
+                    Force Restart
+                  </button>
+                )}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {devModeUnlocked && !sidebarCollapsed && (
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start"
+            className="w-full justify-start h-8 px-3"
             onClick={openDevConsole}
           >
             <Terminal className="h-4 w-4 mr-2" />
-            {t('sidebar.devConsole')}
-            <ExternalLink className="h-3 w-3 ml-auto" />
+            <span className="text-xs truncate">{t('sidebar.devConsole')}</span>
+            <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
           </Button>
         )}
 
         <Button
           variant="ghost"
           size="icon"
-          className="w-full"
+          className="w-full h-8"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         >
           {sidebarCollapsed ? (

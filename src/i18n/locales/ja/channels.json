@@ -1,22 +1,22 @@
 {
-    "title": "メッセージングチャンネル",
-    "subtitle": "メッセージングチャンネルと接続を管理",
+    "title": "連携設定",
+    "subtitle": "連携設定と接続を管理",
     "refresh": "更新",
-    "addChannel": "チャンネルを追加",
+    "addChannel": "連携を追加",
     "stats": {
-        "total": "全チャンネル",
+        "total": "全連携",
         "connected": "接続済み",
         "disconnected": "未接続"
     },
-    "gatewayWarning": "ゲートウェイサービスが実行されていないため、チャンネルに接続できません。",
-    "available": "利用可能なチャンネル",
-    "availableDesc": "新しいチャンネルを接続",
+    "gatewayWarning": "ゲートウェイサービスが実行されていないため、連携に接続できません。",
+    "available": "利用可能な連携",
+    "availableDesc": "新しい連携を接続",
     "showAll": "すべて表示",
     "pluginBadge": "プラグイン",
     "toast": {
         "whatsappConnected": "WhatsApp が正常に接続されました",
         "whatsappFailed": "WhatsApp 接続に失敗しました: {{error}}",
-        "channelSaved": "チャンネル {{name}} が保存されました",
+        "channelSaved": "連携 {{name}} が保存されました",
         "channelConnecting": "{{name}} に接続中...",
         "restartManual": "ゲートウェイを手動で再起動してください",
         "configFailed": "設定に失敗しました: {{error}}"
@@ -24,18 +24,18 @@
     "dialog": {
         "updateTitle": "{{name}} を更新",
         "configureTitle": "{{name}} を設定",
-        "addTitle": "チャンネルを追加",
+        "addTitle": "連携を追加",
         "existingDesc": "既存の設定を更新します",
-        "selectDesc": "設定するチャンネルタイプを選択してください",
+        "selectDesc": "設定する連携タイプを選択してください",
         "qrCode": "QRコード",
         "token": "トークン",
         "scanQR": "{{name}} でこのQRコードをスキャンしてください",
         "refreshCode": "コードを更新",
         "loadingConfig": "設定を読み込み中...",
-        "existingHint": "このチャンネルの設定はすでに存在します",
+        "existingHint": "この連携の設定はすでに存在します",
         "howToConnect": "接続方法",
         "viewDocs": "ドキュメントを表示",
-        "channelName": "チャンネル名",
+        "channelName": "連携名",
         "channelNamePlaceholder": "マイ {{name}}",
         "credentialsVerified": "認証情報が確認されました",
         "validationFailed": "検証に失敗しました",
@@ -272,7 +272,7 @@
             ],
             "docsUrl": "https://docs.openclaw.ai/channels/googlechat"
         },
-        "mattermost": {
+"mattermost": {
             "description": "Bot API 経由で Mattermost に接続します",
             "fields": {
                 "serverUrl": {
@@ -290,7 +290,75 @@
                 "アクセストークンをコピーします"
             ],
             "docsUrl": "https://docs.openclaw.ai/channels/mattermost"
+        },
+        "wechat-miniprogram": {
+            "description": "ClawChat ミニプログラムで個人 WeChat に接続",
+            "docsUrl": "https://github.com/hillghost86/OpenClawWeChat",
+            "fields": {
+                "apiKey": {
+                    "label": "API Key",
+                    "placeholder": "bot_id:secret",
+                    "description": "WeChat ミニプログラム「ClawChat」から API Key を取得"
+                }
+            },
+            "instructions": [
+                "WeChat でミニプログラム「ClawChat」を検索",
+                "「私」→「APIKey管理」から API Key をコピー",
+                "プラグインをインストール: openclaw plugins install openclawwechat",
+                "設定を実行: cd ~/.openclaw/extensions/openclawwechat && npm run config-init"
+            ]
+        },
+"wecom": {
+            "description": "企業 WeChat に接続 - Agent モードと Bot モードをサポート",
+            "docsUrl": "https://github.com/dingxiang-me/OpenClaw-Wechat",
+            "fields": {
+                "corpId": {
+                    "label": "企業ID (CorpId)",
+                    "placeholder": "wwxxxx"
+                },
+                "corpSecret": {
+                    "label": "アプリシークレット",
+                    "placeholder": "アプリシークレット"
+                },
+                "agentId": {
+                    "label": "Agent ID",
+                    "placeholder": "1000004"
+                },
+                "callbackToken": {
+                    "label": "コールバック Token",
+                    "placeholder": "ランダム文字列"
+                },
+                "callbackAesKey": {
+                    "label": "コールバック AES Key",
+                    "placeholder": "WeCom 生成の EncodingAESKey"
+                }
+            },
+            "instructions": [
+                "WeChat 企業管理コンソールでアプリを作成",
+                "「私の企業」ページから CorpId を取得",
+                "アプリ詳細から AgentId と Secret を取得",
+                "メッセージ受信を設定: URL、Token、EncodingAESKey を設定",
+                "プラグインをインストール: git clone https://github.com/dingxiang-me/OpenClaw-Wechat.git"
+            ]
         }
+    },
+    "customChannel": {
+        "title": "カスタム連携",
+        "description": "プリセットリストにないカスタム連携を追加",
+        "icon": "アイコン",
+        "channelId": "チャンネルID",
+        "channelIdDesc": "一意の識別子文字列、例: my-telegram-bot",
+        "configFields": "設定フィールド",
+        "addField": "フィールドを追加",
+        "fieldKey": "フィールド名",
+        "fieldValue": "フィールド値",
+        "markSecret": "機密としてマーク",
+        "unmarkSecret": "機密マークを解除",
+        "showValue": "値を表示",
+        "hideValue": "値を非表示",
+        "fieldsDesc": "設定用のキーと値のペアを追加、例: token, webhookUrl など",
+        "idRequired": "チャンネルIDを入力してください",
+        "nameRequired": "チャンネル名を入力してください"
     },
     "viewDocs": "ドキュメントを表示"
 }

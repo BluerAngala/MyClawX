@@ -6,7 +6,7 @@ export interface Profession {
   descriptionZh: string;
   icon: string;
   color: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  tag?: 'popular' | 'new' | '';
   estimatedSetupTime: number;
   scenes: ProfessionScene[];
   commonSkills: string[];

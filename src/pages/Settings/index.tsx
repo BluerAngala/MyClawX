@@ -28,7 +28,7 @@ import { useGatewayStore } from '@/stores/gateway';
 import { useUpdateStore } from '@/stores/update';
 import { ProvidersSettings } from '@/components/settings/ProvidersSettings';
 import { UpdateSettings } from '@/components/settings/UpdateSettings';
-import { AccordionItem } from '@/components/ui/accordion';
+import { Accordion, AccordionItem } from '@/components/ui/accordion';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '@/i18n';
 
@@ -40,6 +40,8 @@ type ControlUiInfo = {
 
 export function Settings() {
   const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
+  const { t: tChat } = useTranslation('chat');
   const {
     theme,
     setTheme,
@@ -269,416 +271,422 @@ export function Settings() {
         </p>
       </div>
 
-      <AccordionItem
-        icon={<Sun className="h-5 w-5" />}
-        title={t('appearance.title')}
-        description={t('appearance.description')}
-        defaultOpen
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('appearance.theme')}</Label>
-            <div className="flex gap-2">
-              <Button
-                variant={theme === 'light' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTheme('light')}
-              >
-                <Sun className="h-4 w-4 mr-2" />
-                {t('appearance.light')}
-              </Button>
-              <Button
-                variant={theme === 'dark' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTheme('dark')}
-              >
-                <Moon className="h-4 w-4 mr-2" />
-                {t('appearance.dark')}
-              </Button>
-              <Button
-                variant={theme === 'system' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTheme('system')}
-              >
-                <Monitor className="h-4 w-4 mr-2" />
-                {t('appearance.system')}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>{t('appearance.language')}</Label>
-            <div className="flex gap-2">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <Button
-                  key={lang.code}
-                  variant={language === lang.code ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setLanguage(lang.code)}
-                >
-                  {lang.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </AccordionItem>
-
-      <AccordionItem
-        icon={<Key className="h-5 w-5" />}
-        title={t('aiProviders.title')}
-        description={t('aiProviders.description')}
-        defaultOpen
-      >
-        <ProvidersSettings />
-      </AccordionItem>
-
-      <AccordionItem
-        icon={<Download className="h-5 w-5" />}
-        title={t('updates.title')}
-        description={t('updates.description')}
-      >
-        <div className="space-y-4">
-          <UpdateSettings />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('updates.autoCheck')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('updates.autoCheckDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={autoCheckUpdate}
-              onCheckedChange={setAutoCheckUpdate}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('updates.autoDownload')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('updates.autoDownloadDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={autoDownloadUpdate}
-              onCheckedChange={(value) => {
-                setAutoDownloadUpdate(value);
-                updateSetAutoDownload(value);
-              }}
-            />
-          </div>
-        </div>
-      </AccordionItem>
-
-      <AccordionItem
-        icon={<Settings2 className="h-5 w-5" />}
-        title={t('advanced.title')}
-        description={t('advanced.description')}
-      >
-        <div className="space-y-4">
-          {/* Gateway status section */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="font-medium flex items-center gap-2">
-                <Server className="h-4 w-4" />
-                {t('gateway.title')}
-              </h4>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant={
-                    gatewayStatus.state === 'running'
-                      ? 'success'
-                      : gatewayStatus.state === 'error'
-                        ? 'destructive'
-                        : 'secondary'
-                  }
-                >
-                  {gatewayStatus.state}
-                </Badge>
-                <Button variant="outline" size="sm" onClick={restartGateway}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t('common:actions.restart')}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleShowLogs}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  {t('gateway.logs')}
-                </Button>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">
-              {t('gateway.port')}: {gatewayStatus.port}
-            </p>
-
-            {showLogs && (
-              <div className="mt-4 p-4 rounded-lg bg-black/10 dark:bg-black/40 border border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-medium text-sm">{t('gateway.appLogs')}</p>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleOpenLogDir}>
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      {t('gateway.openFolder')}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowLogs(false)}>
-                      {t('common:actions.close')}
-                    </Button>
-                  </div>
-                </div>
-                <pre className="text-xs text-muted-foreground bg-background/50 p-3 rounded max-h-60 overflow-auto whitespace-pre-wrap font-mono">
-                  {logContent || t('chat:noLogs')}
-                </pre>
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('gateway.autoStart')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('gateway.autoStartDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={gatewayAutoStart}
-              onCheckedChange={setGatewayAutoStart}
-            />
-          </div>
-
-          {/* Proxy settings */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <Label>{t('gateway.proxyTitle')}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t('gateway.proxyDesc')}
-                </p>
-              </div>
-              <Switch
-                checked={proxyEnabledDraft}
-                onCheckedChange={setProxyEnabledDraft}
-              />
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="proxy-server">{t('gateway.proxyServer')}</Label>
-                <Input
-                  id="proxy-server"
-                  value={proxyServerDraft}
-                  onChange={(event) => setProxyServerDraft(event.target.value)}
-                  placeholder="http://127.0.0.1:7890"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('gateway.proxyServerHelp')}
-                </p>
-              </div>
-
-              {devModeUnlocked && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="proxy-http-server">{t('gateway.proxyHttpServer')}</Label>
-                    <Input
-                      id="proxy-http-server"
-                      value={proxyHttpServerDraft}
-                      onChange={(event) => setProxyHttpServerDraft(event.target.value)}
-                      placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('gateway.proxyHttpServerHelp')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="proxy-https-server">{t('gateway.proxyHttpsServer')}</Label>
-                    <Input
-                      id="proxy-https-server"
-                      value={proxyHttpsServerDraft}
-                      onChange={(event) => setProxyHttpsServerDraft(event.target.value)}
-                      placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('gateway.proxyHttpsServerHelp')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="proxy-all-server">{t('gateway.proxyAllServer')}</Label>
-                    <Input
-                      id="proxy-all-server"
-                      value={proxyAllServerDraft}
-                      onChange={(event) => setProxyAllServerDraft(event.target.value)}
-                      placeholder={proxyServerDraft || 'socks5://127.0.0.1:7891'}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('gateway.proxyAllServerHelp')}
-                    </p>
-                  </div>
-                </>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="proxy-bypass">{t('gateway.proxyBypass')}</Label>
-                <Input
-                  id="proxy-bypass"
-                  value={proxyBypassRulesDraft}
-                  onChange={(event) => setProxyBypassRulesDraft(event.target.value)}
-                  placeholder="<local>;localhost;127.0.0.1;::1"
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('gateway.proxyBypassHelp')}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3">
-                <p className="text-sm text-muted-foreground">
-                  {t('gateway.proxyRestartNote')}
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={handleSaveProxySettings}
-                  disabled={savingProxy}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2${savingProxy ? ' animate-spin' : ''}`} />
-                  {savingProxy ? t('common:status.saving') : t('common:actions.save')}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Dev mode toggle */}
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>{t('advanced.devMode')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('advanced.devModeDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={devModeUnlocked}
-              onCheckedChange={setDevModeUnlocked}
-            />
-          </div>
-        </div>
-      </AccordionItem>
-
-      {/* Developer tools - only shown when dev mode is unlocked */}
-      {devModeUnlocked && (
+      <Accordion defaultOpenId="appearance">
         <AccordionItem
-          icon={<Terminal className="h-5 w-5" />}
-          title={t('developer.title')}
-          description={t('developer.description')}
+          id="appearance"
+          icon={<Sun className="h-5 w-5" />}
+          title={t('appearance.title')}
+          description={t('appearance.description')}
         >
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('developer.console')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('developer.consoleDesc')}
-              </p>
-              <Button variant="outline" onClick={openDevConsole}>
-                <Terminal className="h-4 w-4 mr-2" />
-                {t('developer.openConsole')}
-                <ExternalLink className="h-3 w-3 ml-2" />
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                {t('developer.consoleNote')}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('developer.gatewayToken')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {t('developer.gatewayTokenDesc')}
-              </p>
+              <Label>{t('appearance.theme')}</Label>
               <div className="flex gap-2">
-                <Input
-                  readOnly
-                  value={controlUiInfo?.token || ''}
-                  placeholder={t('developer.tokenUnavailable')}
-                  className="font-mono"
-                />
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={refreshControlUiInfo}
-                  disabled={!devModeUnlocked}
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('light')}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t('common:actions.load')}
+                  <Sun className="h-4 w-4 mr-2" />
+                  {t('appearance.light')}
                 </Button>
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCopyGatewayToken}
-                  disabled={!controlUiInfo?.token}
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('dark')}
                 >
-                  <Copy className="h-4 w-4 mr-2" />
-                  {t('common:actions.copy')}
+                  <Moon className="h-4 w-4 mr-2" />
+                  {t('appearance.dark')}
+                </Button>
+                <Button
+                  variant={theme === 'system' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTheme('system')}
+                >
+                  <Monitor className="h-4 w-4 mr-2" />
+                  {t('appearance.system')}
                 </Button>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>{t('appearance.language')}</Label>
+              <div className="flex gap-2">
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <Button
+                    key={lang.code}
+                    variant={language === lang.code ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLanguage(lang.code)}
+                  >
+                    {lang.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </AccordionItem>
 
-            {showCliTools && (
-              <div className="space-y-2">
-                <Label>{t('developer.cli')}</Label>
+        <AccordionItem
+          id="providers"
+          icon={<Key className="h-5 w-5" />}
+          title={t('aiProviders.title')}
+          description={t('aiProviders.description')}
+        >
+          <ProvidersSettings />
+        </AccordionItem>
+
+        <AccordionItem
+          id="updates"
+          icon={<Download className="h-5 w-5" />}
+          title={t('updates.title')}
+          description={t('updates.description')}
+        >
+          <div className="space-y-4">
+            <UpdateSettings />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>{t('updates.autoCheck')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  {t('developer.cliDesc')}
+                  {t('updates.autoCheckDesc')}
                 </p>
-                {isWindows && (
-                  <p className="text-xs text-muted-foreground">
-                    {t('developer.cliPowershell')}
+              </div>
+              <Switch
+                checked={autoCheckUpdate}
+                onCheckedChange={setAutoCheckUpdate}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>{t('updates.autoDownload')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('updates.autoDownloadDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={autoDownloadUpdate}
+                onCheckedChange={(value) => {
+                  setAutoDownloadUpdate(value);
+                  updateSetAutoDownload(value);
+                }}
+              />
+            </div>
+          </div>
+        </AccordionItem>
+
+        <AccordionItem
+          id="advanced"
+          icon={<Settings2 className="h-5 w-5" />}
+          title={t('advanced.title')}
+          description={t('advanced.description')}
+        >
+          <div className="space-y-4">
+            {/* Gateway status section */}
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Server className="h-4 w-4" />
+                  {t('gateway.title')}
+                </h4>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={
+                      gatewayStatus.state === 'running'
+                        ? 'success'
+                        : gatewayStatus.state === 'error'
+                          ? 'destructive'
+                          : 'secondary'
+                    }
+                  >
+                    {gatewayStatus.state}
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={restartGateway}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {tCommon('actions.restart')}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleShowLogs}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    {t('gateway.logs')}
+                  </Button>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                {t('gateway.port')}: {gatewayStatus.port}
+              </p>
+
+              {showLogs && (
+                <div className="mt-4 p-4 rounded-lg bg-black/10 dark:bg-black/40 border border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium text-sm">{t('gateway.appLogs')}</p>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={handleOpenLogDir}>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        {t('gateway.openFolder')}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowLogs(false)}>
+                        {tCommon('actions.close')}
+                      </Button>
+                    </div>
+                  </div>
+                  <pre className="text-xs text-muted-foreground bg-background/50 p-3 rounded max-h-60 overflow-auto whitespace-pre-wrap font-mono">
+                    {logContent || tChat('noLogs')}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>{t('gateway.autoStart')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('gateway.autoStartDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={gatewayAutoStart}
+                onCheckedChange={setGatewayAutoStart}
+              />
+            </div>
+
+            {/* Proxy settings */}
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <Label>{t('gateway.proxyTitle')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('gateway.proxyDesc')}
                   </p>
+                </div>
+                <Switch
+                  checked={proxyEnabledDraft}
+                  onCheckedChange={setProxyEnabledDraft}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="proxy-server">{t('gateway.proxyServer')}</Label>
+                  <Input
+                    id="proxy-server"
+                    value={proxyServerDraft}
+                    onChange={(event) => setProxyServerDraft(event.target.value)}
+                    placeholder="http://127.0.0.1:7890"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('gateway.proxyServerHelp')}
+                  </p>
+                </div>
+
+                {devModeUnlocked && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="proxy-http-server">{t('gateway.proxyHttpServer')}</Label>
+                      <Input
+                        id="proxy-http-server"
+                        value={proxyHttpServerDraft}
+                        onChange={(event) => setProxyHttpServerDraft(event.target.value)}
+                        placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('gateway.proxyHttpServerHelp')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="proxy-https-server">{t('gateway.proxyHttpsServer')}</Label>
+                      <Input
+                        id="proxy-https-server"
+                        value={proxyHttpsServerDraft}
+                        onChange={(event) => setProxyHttpsServerDraft(event.target.value)}
+                        placeholder={proxyServerDraft || 'http://127.0.0.1:7890'}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('gateway.proxyHttpsServerHelp')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="proxy-all-server">{t('gateway.proxyAllServer')}</Label>
+                      <Input
+                        id="proxy-all-server"
+                        value={proxyAllServerDraft}
+                        onChange={(event) => setProxyAllServerDraft(event.target.value)}
+                        placeholder={proxyServerDraft || 'socks5://127.0.0.1:7891'}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('gateway.proxyAllServerHelp')}
+                      </p>
+                    </div>
+                  </>
                 )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="proxy-bypass">{t('gateway.proxyBypass')}</Label>
+                  <Input
+                    id="proxy-bypass"
+                    value={proxyBypassRulesDraft}
+                    onChange={(event) => setProxyBypassRulesDraft(event.target.value)}
+                    placeholder="<local>;localhost;127.0.0.1;::1"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('gateway.proxyBypassHelp')}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 p-3">
+                  <p className="text-sm text-muted-foreground">
+                    {t('gateway.proxyRestartNote')}
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={handleSaveProxySettings}
+                    disabled={savingProxy}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2${savingProxy ? ' animate-spin' : ''}`} />
+                    {savingProxy ? tCommon('status.saving') : tCommon('actions.save')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Dev mode toggle */}
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>{t('advanced.devMode')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('advanced.devModeDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={devModeUnlocked}
+                onCheckedChange={setDevModeUnlocked}
+              />
+            </div>
+          </div>
+        </AccordionItem>
+
+        {/* Developer tools - only shown when dev mode is unlocked */}
+        {devModeUnlocked && (
+          <AccordionItem
+            id="developer"
+            icon={<Terminal className="h-5 w-5" />}
+            title={t('developer.title')}
+            description={t('developer.description')}
+          >
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>{t('developer.console')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('developer.consoleDesc')}
+                </p>
+                <Button variant="outline" onClick={openDevConsole}>
+                  <Terminal className="h-4 w-4 mr-2" />
+                  {t('developer.openConsole')}
+                  <ExternalLink className="h-3 w-3 ml-2" />
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {t('developer.consoleNote')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('developer.gatewayToken')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {t('developer.gatewayTokenDesc')}
+                </p>
                 <div className="flex gap-2">
                   <Input
                     readOnly
-                    value={openclawCliCommand}
-                    placeholder={openclawCliError || t('developer.cmdUnavailable')}
+                    value={controlUiInfo?.token || ''}
+                    placeholder={t('developer.tokenUnavailable')}
                     className="font-mono"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={handleCopyCliCommand}
-                    disabled={!openclawCliCommand}
+                    onClick={refreshControlUiInfo}
+                    disabled={!devModeUnlocked}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    {tCommon('actions.load')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCopyGatewayToken}
+                    disabled={!controlUiInfo?.token}
                   >
                     <Copy className="h-4 w-4 mr-2" />
-                    {t('common:actions.copy')}
+                    {tCommon('actions.copy')}
                   </Button>
                 </div>
               </div>
-            )}
+
+              {showCliTools && (
+                <div className="space-y-2">
+                  <Label>{t('developer.cli')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('developer.cliDesc')}
+                  </p>
+                  {isWindows && (
+                    <p className="text-xs text-muted-foreground">
+                      {t('developer.cliPowershell')}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Input
+                      readOnly
+                      value={openclawCliCommand}
+                      placeholder={openclawCliError || t('developer.cmdUnavailable')}
+                      className="font-mono"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleCopyCliCommand}
+                      disabled={!openclawCliCommand}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      {tCommon('actions.copy')}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </AccordionItem>
+        )}
+
+        {/* About section */}
+        <AccordionItem
+          id="about"
+          title={t('about.title')}
+        >
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              <strong>{t('about.appName')}</strong> - {t('about.tagline')}
+            </p>
+            <p>{t('about.basedOn')}</p>
+            <p>{t('about.version', { version: currentVersion })}</p>
+            <div className="flex gap-4 pt-2">
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                onClick={() => window.electron.openExternal('https://claw-x.com')}
+              >
+                {t('about.docs')}
+              </Button>
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                onClick={() => window.electron.openExternal('https://github.com/ValueCell-ai/MyClawX')}
+              >
+                {t('about.github')}
+              </Button>
+            </div>
           </div>
         </AccordionItem>
-      )}
-
-      {/* About section */}
-      <AccordionItem
-        title={t('about.title')}
-      >
-        <div className="space-y-2 text-sm text-muted-foreground">
-          <p>
-            <strong>{t('about.appName')}</strong> - {t('about.tagline')}
-          </p>
-          <p>{t('about.basedOn')}</p>
-          <p>{t('about.version', { version: currentVersion })}</p>
-          <div className="flex gap-4 pt-2">
-            <Button
-              variant="link"
-              className="h-auto p-0"
-              onClick={() => window.electron.openExternal('https://claw-x.com')}
-            >
-              {t('about.docs')}
-            </Button>
-            <Button
-              variant="link"
-              className="h-auto p-0"
-              onClick={() => window.electron.openExternal('https://github.com/ValueCell-ai/MyClawX')}
-            >
-              {t('about.github')}
-            </Button>
-          </div>
-        </div>
-      </AccordionItem>
+      </Accordion>
     </div>
   );
 }

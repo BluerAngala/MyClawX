@@ -1,5 +1,7 @@
 {
     "gatewayNotRunning": "网关未运行",
+    "gatewayStarting": "网关正在启动...",
+    "gatewayError": "网关启动失败",
     "gatewayRequired": "OpenClaw 网关需要运行才能使用聊天。它将自动启动，或者您可以从设置中启动。",
     "inputPlaceholder": "输入消息（Enter 发送，Shift+Enter 换行）",
     "inputPlaceholderDisabled": "网关未连接...",

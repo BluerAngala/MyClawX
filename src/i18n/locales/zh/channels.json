@@ -290,7 +290,75 @@
                 "创建一个新的 Bot 账户",
                 "复制访问令牌"
             ]
+        },
+        "wechat-miniprogram": {
+            "description": "通过 ClawChat 微信小程序接入个人微信",
+            "docsUrl": "https://github.com/hillghost86/OpenClawWeChat",
+            "fields": {
+                "apiKey": {
+                    "label": "API Key",
+                    "placeholder": "bot_id:secret",
+                    "description": "从微信小程序「ClawChat」获取 API Key"
+                }
+            },
+            "instructions": [
+                "打开微信，搜索小程序「ClawChat」",
+                "在「我的」→「APIKey管理」中复制 API Key",
+                "安装插件：openclaw plugins install openclawwechat",
+                "运行配置：cd ~/.openclaw/extensions/openclawwechat && npm run config-init"
+            ]
+        },
+        "wecom": {
+            "description": "接入企业微信，支持 Agent 模式（自建应用）和 Bot 模式（智能机器人）",
+            "docsUrl": "https://github.com/dingxiang-me/OpenClaw-Wechat",
+            "fields": {
+                "corpId": {
+                    "label": "企业 ID (CorpId)",
+                    "placeholder": "wwxxxx"
+                },
+                "corpSecret": {
+                    "label": "应用 Secret",
+                    "placeholder": "您的应用密钥"
+                },
+                "agentId": {
+                    "label": "应用 AgentId",
+                    "placeholder": "1000004"
+                },
+                "callbackToken": {
+                    "label": "回调 Token",
+                    "placeholder": "自定义随机字符串"
+                },
+                "callbackAesKey": {
+                    "label": "回调 AES Key",
+                    "placeholder": "企业微信生成的 EncodingAESKey"
+                }
+            },
+            "instructions": [
+                "在企业微信管理后台创建自建应用",
+                "获取 CorpId（我的企业页面）",
+                "获取 AgentId 和 Secret（应用详情页）",
+                "配置接收消息：设置 URL、Token、EncodingAESKey",
+                "安装插件：git clone https://github.com/dingxiang-me/OpenClaw-Wechat.git"
+            ]
         }
+    },
+    "customChannel": {
+        "title": "自定义渠道",
+        "description": "添加不在预设列表中的自定义渠道配置",
+        "icon": "图标",
+        "channelId": "渠道标识",
+        "channelIdDesc": "唯一标识此渠道的英文字符串，如 my-telegram-bot",
+        "configFields": "配置字段",
+        "addField": "添加字段",
+        "fieldKey": "字段名",
+        "fieldValue": "字段值",
+        "markSecret": "标记为敏感信息",
+        "unmarkSecret": "取消敏感标记",
+        "showValue": "显示值",
+        "hideValue": "隐藏值",
+        "fieldsDesc": "添加需要配置的键值对，如 token、webhookUrl 等",
+        "idRequired": "请输入渠道标识",
+        "nameRequired": "请输入渠道名称"
     },
     "viewDocs": "查看文档"
 }

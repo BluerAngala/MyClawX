@@ -326,17 +326,20 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
   const [selectedProfession, setSelectedProfession] = useState<string | null>(null);
   const [selectedScene, setSelectedScene] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
 
   useEffect(() => {
     void fetchProfessions();
   }, [fetchProfessions]);
 
-  const handleApply = async () => {
-    if (!selectedProfession || !selectedScene) return;
+  const handleSelectScene = async (sceneId: string) => {
+    if (!selectedProfession || applied) return;
+    setSelectedScene(sceneId);
     setApplying(true);
-    const result = await applyScene(selectedProfession, selectedScene);
+    const result = await applyScene(selectedProfession, sceneId);
     setApplying(false);
     if (result.success) {
+      setApplied(true);
       onConfiguredChange(true);
       toast.success('职业场景已配置');
     } else {
@@ -345,7 +348,6 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
   };
 
   const profession = professions.find(p => p.id === selectedProfession);
-  const scene = profession?.scenes.find(s => s.id === selectedScene);
 
   if (loading) {
     return (
@@ -360,6 +362,11 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
 
   return (
     <div className="space-y-6">
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-semibold mb-2">选择职业场景</h2>
+        <p className="text-sm text-muted-foreground">选择您的职业，我们将为您配置最适合的 AI 工作流</p>
+      </div>
+
       {!selectedProfession ? (
         <div className="grid gap-4 md:grid-cols-2">
           {professions.map((profession) => (
@@ -371,9 +378,16 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <span className="text-4xl">{profession.icon}</span>
-                  <Badge variant={profession.difficulty === 'beginner' ? 'default' : 'outline'}>
-                    {profession.difficulty === 'beginner' ? '入门' : profession.difficulty}
-                  </Badge>
+                  {profession.tag === 'popular' && (
+                    <Badge className="bg-orange-100 text-orange-700">
+                      热门
+                    </Badge>
+                  )}
+                  {profession.tag === 'new' && (
+                    <Badge className="bg-blue-100 text-blue-700">
+                      新上线
+                    </Badge>
+                  )}
                 </div>
                 <CardTitle className="mt-2">{profession.nameZh}</CardTitle>
                 <CardDescription>{profession.descriptionZh}</CardDescription>
@@ -387,107 +401,66 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
             </Card>
           ))}
         </div>
-      ) : !selectedScene ? (
-        <div className="space-y-4">
-          <Button variant="ghost" onClick={() => setSelectedProfession(null)}>
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            返回
-          </Button>
-
-          <div className="space-y-3">
-            {profession?.scenes.map((scene) => (
-              <Card
-                key={scene.id}
-                className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
-                onClick={() => setSelectedScene(scene.id)}
-              >
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{scene.icon}</span>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{scene.nameZh}</CardTitle>
-                      <CardDescription>{scene.descriptionZh}</CardDescription>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-1">
-                    {scene.useCasesZh.slice(0, 2).map((useCase, index) => (
-                      <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
-                        {useCase}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
       ) : (
         <div className="space-y-4">
-          <Button variant="ghost" onClick={() => setSelectedScene(null)}>
+          <Button variant="ghost" onClick={() => { setSelectedProfession(null); setSelectedScene(null); }}>
             <ChevronLeft className="mr-2 h-4 w-4" />
-            返回
+            返回选择职业
           </Button>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{scene?.icon}</span>
-                <div>
-                  <CardTitle>{scene?.nameZh}</CardTitle>
-                  <CardDescription>{scene?.descriptionZh}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="mb-2 text-sm font-medium">包含技能：</p>
-                <div className="flex flex-wrap gap-2">
-                  {scene?.skills.map((skill) => (
-                    <Badge key={skill.slug} variant={skill.required ? 'default' : 'outline'}>
-                      {skill.description || skill.slug}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+          <div className="text-center mb-2">
+            <h3 className="text-lg font-medium">{profession?.nameZh}</h3>
+            <p className="text-sm text-muted-foreground">选择一个场景快速配置</p>
+          </div>
 
-              <div>
-                <p className="mb-2 text-sm font-medium">提示词模板：</p>
-                <div className="space-y-2">
-                  {scene?.promptTemplates.map((template) => (
-                    <div key={template.id} className="rounded bg-muted p-2 text-sm">
-                      <span className="font-medium">{template.nameZh}</span>
+          <div className="space-y-3">
+            {profession?.scenes.map((scene) => {
+              const isSelected = selectedScene === scene.id;
+              const isApplied = applied && isSelected;
+              return (
+                <Card
+                  key={scene.id}
+                  className={cn(
+                    'cursor-pointer transition-all hover:shadow-lg',
+                    isApplied ? 'border-green-500 bg-green-50/50' : 'hover:border-primary/50',
+                    applying && !isSelected && 'opacity-50 pointer-events-none'
+                  )}
+                  onClick={() => !applied && handleSelectScene(scene.id)}
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{scene.icon}</span>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg">{scene.nameZh}</CardTitle>
+                        <CardDescription>{scene.descriptionZh}</CardDescription>
+                      </div>
+                      {isApplied && (
+                        <Badge className="bg-green-100 text-green-700">
+                          <Check className="mr-1 h-3 w-3" />
+                          已选择
+                        </Badge>
+                      )}
+                      {applying && isSelected && (
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <Button onClick={handleApply} disabled={applying} className="w-full">
-                {applying ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    应用中...
-                  </>
-                ) : (
-                  <>
-                    <Check className="mr-2 h-4 w-4" />
-                    应用此配置
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-1">
+                      {scene.useCasesZh.slice(0, 2).map((useCase, index) => (
+                        <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <Sparkles className="mt-0.5 h-4 w-4 text-primary" />
+                          {useCase}
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
-
-      <div className="text-center">
-        <Button variant="ghost" onClick={() => onConfiguredChange(true)}>
-          跳过，稍后配置
-        </Button>
-      </div>
     </div>
   );
 }
@@ -887,6 +860,7 @@ function ProviderContent({
   onConfiguredChange,
 }: ProviderContentProps) {
   const { t } = useTranslation(['setup', 'settings']);
+  const { t: tSettings } = useTranslation('settings');
   const devModeUnlocked = useSettingsStore((state) => state.devModeUnlocked);
   const [showKey, setShowKey] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -929,7 +903,7 @@ function ProviderContent({
       }
 
       onConfiguredChange(true);
-      toast.success(t('provider.valid'));
+      toast.success(t('setup:provider.valid'));
     };
 
     const handleError = (data: unknown) => {
@@ -959,11 +933,11 @@ function ProviderContent({
       const list = await window.electron.ipcRenderer.invoke('provider:list') as Array<{ type: string }>;
       const existingTypes = new Set(list.map(l => l.type));
       if (selectedProvider === 'minimax-portal' && existingTypes.has('minimax-portal-cn')) {
-        toast.error(t('settings:aiProviders.toast.minimaxConflict'));
+        toast.error(tSettings('aiProviders.toast.minimaxConflict'));
         return;
       }
       if (selectedProvider === 'minimax-portal-cn' && existingTypes.has('minimax-portal')) {
-        toast.error(t('settings:aiProviders.toast.minimaxConflict'));
+        toast.error(tSettings('aiProviders.toast.minimaxConflict'));
         return;
       }
     } catch {
@@ -1104,11 +1078,11 @@ function ProviderContent({
       const list = await window.electron.ipcRenderer.invoke('provider:list') as Array<{ type: string }>;
       const existingTypes = new Set(list.map(l => l.type));
       if (selectedProvider === 'minimax-portal' && existingTypes.has('minimax-portal-cn')) {
-        toast.error(t('settings:aiProviders.toast.minimaxConflict'));
+        toast.error(tSettings('aiProviders.toast.minimaxConflict'));
         return;
       }
       if (selectedProvider === 'minimax-portal-cn' && existingTypes.has('minimax-portal')) {
-        toast.error(t('settings:aiProviders.toast.minimaxConflict'));
+        toast.error(tSettings('aiProviders.toast.minimaxConflict'));
         return;
       }
     } catch {
@@ -1132,7 +1106,7 @@ function ProviderContent({
         setKeyValid(result.valid);
 
         if (!result.valid) {
-          toast.error(result.error || t('provider.invalid'));
+          toast.error(result.error || t('setup:provider.invalid'));
           setValidating(false);
           return;
         }
@@ -1160,7 +1134,7 @@ function ProviderContent({
         'provider:save',
         {
           id: providerIdForSave,
-          name: selectedProvider === 'custom' ? t('settings:aiProviders.custom') : (selectedProviderData?.name || selectedProvider),
+          name: selectedProvider === 'custom' ? tSettings('aiProviders.custom') : (selectedProviderData?.name || selectedProvider),
           type: selectedProvider,
           baseUrl: baseUrl.trim() || undefined,
           model: effectiveModelId,
@@ -1186,7 +1160,7 @@ function ProviderContent({
 
       setSelectedProviderConfigId(providerIdForSave);
       onConfiguredChange(true);
-      toast.success(t('provider.valid'));
+      toast.success(t('setup:provider.valid'));
     } catch (error) {
       setKeyValid(false);
       onConfiguredChange(false);
@@ -1218,7 +1192,7 @@ function ProviderContent({
     <div className="space-y-6">
       {/* Provider selector — dropdown */}
       <div className="space-y-2">
-        <Label>{t('provider.label')}</Label>
+        <Label>{t('setup:provider.label')}</Label>
         <div className="relative" ref={providerMenuRef}>
           <button
             type="button"
@@ -1247,8 +1221,8 @@ function ProviderContent({
               )}
               <span className={cn('truncate text-left', !selectedProvider && 'text-muted-foreground')}>
                 {selectedProviderData
-                  ? `${selectedProviderData.id === 'custom' ? t('settings:aiProviders.custom') : selectedProviderData.name}${selectedProviderData.model ? ` — ${selectedProviderData.model}` : ''}`
-                  : t('provider.selectPlaceholder')}
+                  ? `${selectedProviderData.id === 'custom' ? tSettings('aiProviders.custom') : selectedProviderData.name}${selectedProviderData.model ? ` — ${selectedProviderData.model}` : ''}`
+                  : t('setup:provider.selectPlaceholder')}
               </span>
             </div>
             <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform', providerMenuOpen && 'rotate-180')} />
@@ -1286,7 +1260,7 @@ function ProviderContent({
                       ) : (
                         <span className="text-sm leading-none shrink-0">{p.icon}</span>
                       )}
-                      <span className="truncate">{p.id === 'custom' ? t('settings:aiProviders.custom') : p.name}{p.model ? ` — ${p.model}` : ''}</span>
+                      <span className="truncate">{p.id === 'custom' ? tSettings('aiProviders.custom') : p.name}{p.model ? ` — ${p.model}` : ''}</span>
                     </div>
                     {isSelected && <Check className="h-4 w-4 text-primary shrink-0" />}
                   </button>
@@ -1308,7 +1282,7 @@ function ProviderContent({
           {/* Base URL field (for siliconflow, ollama, custom) */}
           {showBaseUrlField && (
             <div className="space-y-2">
-              <Label htmlFor="baseUrl">{t('provider.baseUrl')}</Label>
+              <Label htmlFor="baseUrl">{t('setup:provider.baseUrl')}</Label>
               <Input
                 id="baseUrl"
                 type="text"
@@ -1327,7 +1301,7 @@ function ProviderContent({
           {/* Model ID field (for siliconflow etc.) */}
           {showModelIdField && (
             <div className="space-y-2">
-              <Label htmlFor="modelId">{t('provider.modelId')}</Label>
+              <Label htmlFor="modelId">{t('setup:provider.modelId')}</Label>
               <Input
                 id="modelId"
                 type="text"
@@ -1341,7 +1315,7 @@ function ProviderContent({
                 className="bg-background border-input"
               />
               <p className="text-xs text-muted-foreground">
-                {t('provider.modelIdDesc')}
+                {t('setup:provider.modelIdDesc')}
               </p>
             </div>
           )}
@@ -1356,7 +1330,7 @@ function ProviderContent({
                   authMode === 'oauth' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
                 )}
               >
-                {t('settings:aiProviders.oauth.loginMode')}
+                {tSettings('aiProviders.oauth.loginMode')}
               </button>
               <button
                 onClick={() => setAuthMode('apikey')}
@@ -1365,7 +1339,7 @@ function ProviderContent({
                   authMode === 'apikey' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'
                 )}
               >
-                {t('settings:aiProviders.oauth.apikeyMode')}
+                {tSettings('aiProviders.oauth.apikeyMode')}
               </button>
             </div>
           )}
@@ -1373,7 +1347,7 @@ function ProviderContent({
           {/* API Key field (hidden for ollama) */}
           {(!isOAuth || (supportsApiKey && authMode === 'apikey')) && (
             <div className="space-y-2">
-              <Label htmlFor="apiKey">{t('provider.apiKey')}</Label>
+              <Label htmlFor="apiKey">{t('setup:provider.apiKey')}</Label>
               <div className="relative">
                 <Input
                   id="apiKey"
@@ -1501,17 +1475,17 @@ function ProviderContent({
             {validating ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
             ) : null}
-            {requiresKey ? t('provider.validateSave') : t('provider.save')}
+            {requiresKey ? t('setup:provider.validateSave') : t('setup:provider.save')}
           </Button>
 
           {keyValid !== null && (
             <p className={cn('text-sm text-center', keyValid ? 'text-green-400' : 'text-red-400')}>
-              {keyValid ? `✓ ${t('provider.valid')}` : `✗ ${t('provider.invalid')}`}
+              {keyValid ? `✓ ${t('setup:provider.valid')}` : `✗ ${t('setup:provider.invalid')}`}
             </p>
           )}
 
           <p className="text-sm text-muted-foreground text-center">
-            {t('provider.storedLocally')}
+            {t('setup:provider.storedLocally')}
           </p>
         </motion.div>
       )}
@@ -1710,6 +1684,7 @@ interface CompleteContentProps {
 
 function CompleteContent({ selectedProvider, installedSkills }: CompleteContentProps) {
   const { t } = useTranslation(['setup', 'settings']);
+  const { t: tSettings } = useTranslation('settings');
   const gatewayStatus = useGatewayStore((state) => state.status);
 
   const providerData = providers.find((p) => p.id === selectedProvider);
@@ -1721,34 +1696,34 @@ function CompleteContent({ selectedProvider, installedSkills }: CompleteContentP
   return (
     <div className="text-center space-y-6">
       <div className="text-6xl mb-4">🎉</div>
-      <h2 className="text-xl font-semibold">{t('complete.title')}</h2>
+      <h2 className="text-xl font-semibold">{t('setup:complete.title')}</h2>
       <p className="text-muted-foreground">
-        {t('complete.subtitle')}
+        {t('setup:complete.subtitle')}
       </p>
 
       <div className="space-y-3 text-left max-w-md mx-auto">
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-          <span>{t('complete.provider')}</span>
+          <span>{t('setup:complete.provider')}</span>
           <span className="text-green-400">
-            {providerData ? <span className="flex items-center gap-1.5">{getProviderIconUrl(providerData.id) ? <img src={getProviderIconUrl(providerData.id)} alt={providerData.name} className={`h-4 w-4 inline-block ${shouldInvertInDark(providerData.id) ? 'dark:invert' : ''}`} /> : providerData.icon} {providerData.id === 'custom' ? t('settings:aiProviders.custom') : providerData.name}</span> : '—'}
+            {providerData ? <span className="flex items-center gap-1.5">{getProviderIconUrl(providerData.id) ? <img src={getProviderIconUrl(providerData.id)} alt={providerData.name} className={`h-4 w-4 inline-block ${shouldInvertInDark(providerData.id) ? 'dark:invert' : ''}`} /> : providerData.icon} {providerData.id === 'custom' ? tSettings('aiProviders.custom') : providerData.name}</span> : '—'}
           </span>
         </div>
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-          <span>{t('complete.components')}</span>
+          <span>{t('setup:complete.components')}</span>
           <span className="text-green-400">
-            {installedSkillNames || `${installedSkills.length} ${t('installing.status.installed')}`}
+            {installedSkillNames || `${installedSkills.length} ${t('setup:installing.status.installed')}`}
           </span>
         </div>
         <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-          <span>{t('complete.gateway')}</span>
+          <span>{t('setup:complete.gateway')}</span>
           <span className={gatewayStatus.state === 'running' ? 'text-green-400' : 'text-yellow-400'}>
-            {gatewayStatus.state === 'running' ? `✓ ${t('complete.running')}` : gatewayStatus.state}
+            {gatewayStatus.state === 'running' ? `✓ ${t('setup:complete.running')}` : gatewayStatus.state}
           </span>
         </div>
       </div>
 
       <p className="text-sm text-muted-foreground">
-        {t('complete.footer')}
+        {t('setup:complete.footer')}
       </p>
     </div>
   );

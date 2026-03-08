@@ -17,7 +17,7 @@ interface ProfessionsState {
   fetchProfessions: () => Promise<void>;
   selectProfession: (id: string) => Promise<void>;
   selectScene: (professionId: string, sceneId: string) => Promise<void>;
-  applyScene: (professionId: string, sceneId: string) => Promise<{ success: boolean; error?: string }>;
+  applyScene: (professionId: string, sceneId: string, skillSlugs?: string[]) => Promise<{ success: boolean; error?: string }>;
   fetchUserConfig: () => Promise<void>;
 }
 
@@ -73,10 +73,10 @@ export const useProfessionsStore = create<ProfessionsState>()((set, get) => ({
     }
   },
 
-  applyScene: async (professionId: string, sceneId: string): Promise<{ success: boolean; error?: string }> => {
+  applyScene: async (professionId: string, sceneId: string, skillSlugs?: string[]): Promise<{ success: boolean; error?: string }> => {
     set({ loading: true, error: null });
     try {
-      const result = await window.electron.ipcRenderer.invoke('profession:applyScene', professionId, sceneId) as { success: boolean; error?: string };
+      const result = await window.electron.ipcRenderer.invoke('profession:applyScene', professionId, sceneId, skillSlugs) as { success: boolean; error?: string };
       if (result.success) {
         await get().fetchUserConfig();
       }

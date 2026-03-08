@@ -43,7 +43,7 @@ interface Profession {
   descriptionZh: string;
   icon: string;
   color: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  tag?: 'popular' | 'new' | '';
   estimatedSetupTime: number;
   scenes: ProfessionScene[];
   commonSkills: string[];
@@ -397,6 +397,101 @@ const builtinTeacherScenes: ProfessionScene[] = [
   },
 ];
 
+const builtinResearcherScenes: ProfessionScene[] = [
+  {
+    id: 'deep-research',
+    name: 'Deep Research',
+    nameZh: '深度专题调研',
+    description: 'Perform exhaustive web search and synthesize complex topics',
+    descriptionZh: '对复杂话题进行详尽的网络搜索与信息合成',
+    icon: '🔍',
+    useCasesZh: [
+      '对新兴技术或行业趋势进行全网扫描并总结',
+      '对比不同产品的优缺点、价格与用户评价',
+      '搜集特定主题的权威数据、论文或报道并整理成综述',
+    ],
+    skills: [
+      { slug: 'web-browse', required: true, description: '全网检索最新信息' },
+      { slug: 'summarize', required: true, description: '信息提炼与长文合成' },
+    ] as SceneSkill[],
+    promptTemplates: [
+      {
+        id: 'research-report',
+        name: 'Research Report',
+        nameZh: '深度调研报告',
+        category: 'research',
+        content:
+          '请针对以下主题进行深度调研并撰写报告：\n\n调研主题：{{topic}}\n侧重点：{{focus}}\n目标读者：{{audience}}\n\n要求：\n1. 首先搜索并列出至少 5-8 个高质量来源\n2. 总结当前该领域的核心现状与关键数据\n3. 分析主要的竞争格局或技术路径对比\n4. 识别未来的 3-5 个关键发展趋势\n5. 给出针对性的结论与建议\n\n请按专业的商业/技术报告格式输出，包含目录和要点总结。',
+      },
+    ] as PromptTemplate[],
+  },
+  {
+    id: 'market-analysis',
+    name: 'Market Analysis',
+    nameZh: '竞品与市场分析',
+    description: 'Track competitors and analyze market positioning',
+    descriptionZh: '跟踪竞争对手动态并分析市场定位',
+    icon: '📊',
+    useCasesZh: [
+      '监控竞争对手的最新动态、融资与产品更新',
+      '分析目标市场的规模、增长率与主要玩家',
+      '进行 SWOT 分析并提供市场进入策略建议',
+    ],
+    skills: [
+      { slug: 'web-browse', required: true, description: '搜索竞品动态与市场报告' },
+      { slug: 'summarize', required: true, description: '竞争情报提取' },
+    ] as SceneSkill[],
+    promptTemplates: [
+      {
+        id: 'competitor-tracker',
+        name: 'Competitor Tracker',
+        nameZh: '竞品监控简报',
+        category: 'analysis',
+        content:
+          '请帮我搜集并分析以下竞品的最新动态：\n\n竞品名称：{{competitor_names}}\n关注周期：最近{{period}}\n重点关注：{{focus_areas}}（如产品功能/定价/营销活动）\n\n输出要求：\n1. 各竞品最近的主要动作汇总\n2. 相比我方的优势与威胁分析\n3. 值得我们参考或警惕的地方\n4. 建议的应对策略',
+      },
+    ] as PromptTemplate[],
+  },
+];
+
+const builtinProgrammerScenes: ProfessionScene[] = [
+  {
+    id: 'code-assistant',
+    name: 'Code Assistant',
+    nameZh: '编程开发辅助',
+    description: 'Code review, bug fixing, and documentation helper',
+    descriptionZh: '代码审查、Bug 修复与文档起草助手',
+    icon: '💻',
+    useCasesZh: [
+      '审查一段代码并提出性能、安全性与可读性优化建议',
+      '根据一段代码逻辑自动生成相应的文档注释或 README',
+      '解释复杂的算法或遗留代码库中的特定模块',
+    ],
+    skills: [
+      { slug: 'summarize', required: true, description: '代码逻辑理解与总结' },
+      { slug: 'file-tools', required: false, description: '读取本地源码文件' },
+    ] as SceneSkill[],
+    promptTemplates: [
+      {
+        id: 'code-review',
+        name: 'Code Review',
+        nameZh: '代码深度审查',
+        category: 'dev',
+        content:
+          '请作为一名高级工程师，对以下代码进行深度审查：\n\n代码语言：{{language}}\n代码内容：\n{{code}}\n\n审查要求：\n1. 识别潜在的 Bug 或边界情况处理不当的地方\n2. 提出性能优化建议（算法复杂度、资源使用等）\n3. 检查代码规范与可读性（命名、结构、注释）\n4. 识别安全风险（注入、泄露等）\n5. 给出具体的修改后的代码片段',
+      },
+      {
+        id: 'doc-generator',
+        name: 'Doc Generator',
+        nameZh: '技术文档生成',
+        category: 'dev',
+        content:
+          '请根据以下代码逻辑，起草一份高质量的技术文档：\n\n代码内容：\n{{code}}\n文档类型：{{doc_type}}（API文档/模块说明/README/变更日志）\n\n要求：\n1. 清晰解释该模块/函数的核心功能与设计意图\n2. 详细列出输入输出参数、类型及含义\n3. 给出 1-2 个典型的使用示例代码\n4. 说明可能的错误码或异常处理方式\n5. 使用标准的 Markdown 格式输出',
+      },
+    ] as PromptTemplate[],
+  },
+];
+
 const BUILTIN_PROFESSIONS: Profession[] = [
   {
     id: 'content-creator',
@@ -406,10 +501,35 @@ const BUILTIN_PROFESSIONS: Profession[] = [
     descriptionZh: '自动化内容创作和社交媒体发布',
     icon: '✍️',
     color: 'rose',
-    difficulty: 'beginner',
+    tag: 'popular',
     estimatedSetupTime: 5,
     commonSkills: ['web-browse', 'summarize'],
     scenes: builtinContentCreatorScenes,
+  },
+  {
+    id: 'researcher',
+    name: 'Researcher / Analyst',
+    nameZh: '调研员 / 分析师',
+    description: 'Deep topic research, market analysis, and report synthesis',
+    descriptionZh: '深度专题调研、市场情报跟踪与专业报告合成',
+    icon: '🔎',
+    color: 'emerald',
+    tag: 'new',
+    estimatedSetupTime: 10,
+    commonSkills: ['web-browse', 'summarize'],
+    scenes: builtinResearcherScenes,
+  },
+  {
+    id: 'programmer',
+    name: 'Software Developer',
+    nameZh: '软件开发工程师',
+    description: 'Code assistant, technical documentation, and code review',
+    descriptionZh: '代码审查、技术文档编写与开发辅助助手',
+    icon: '👨‍💻',
+    color: 'cyan',
+    estimatedSetupTime: 8,
+    commonSkills: ['summarize', 'file-tools'],
+    scenes: builtinProgrammerScenes,
   },
   {
     id: 'lawyer',
@@ -419,7 +539,6 @@ const BUILTIN_PROFESSIONS: Profession[] = [
     descriptionZh: '面向律师与法务的合同审查、法律检索与文书起草助手',
     icon: '⚖️',
     color: 'indigo',
-    difficulty: 'intermediate',
     estimatedSetupTime: 15,
     commonSkills: ['web-browse', 'summarize', 'file-tools'],
     scenes: builtinLawyerScenes,
@@ -432,7 +551,7 @@ const BUILTIN_PROFESSIONS: Profession[] = [
     descriptionZh: '备课教案、论文写作与试题命制助手',
     icon: '🎓',
     color: 'blue',
-    difficulty: 'beginner',
+    tag: 'popular',
     estimatedSetupTime: 5,
     commonSkills: ['web-browse', 'summarize', 'file-tools'],
     scenes: builtinTeacherScenes,
@@ -565,7 +684,8 @@ export async function saveUserProfessionConfig(config: UserProfessionConfig): Pr
  */
 export async function applyProfessionScene(
   professionId: string,
-  sceneId: string
+  sceneId: string,
+  skillSlugs?: string[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const profession = await loadProfession(professionId);
@@ -591,7 +711,7 @@ export async function applyProfessionScene(
     // the basic profession config from being saved, so we log instead of
     // throwing.
     try {
-      await autoSetupScene(profession, scene);
+      await autoSetupScene(profession, scene, skillSlugs);
     } catch (autoErr) {
       logger.warn('Failed to auto-setup profession scene:', autoErr);
     }
@@ -606,14 +726,20 @@ export async function applyProfessionScene(
  * Automatically install/enable skills and bootstrap simple cron jobs
  * for a given profession scene.
  */
-async function autoSetupScene(profession: Profession, scene: Profession['scenes'][number]): Promise<void> {
-  // 1) Install & enable required skills (by slug)
-  const requiredSkillSlugs = scene.skills.filter((s) => s.required).map((s) => s.slug);
-  if (requiredSkillSlugs.length > 0) {
+async function autoSetupScene(
+  profession: Profession,
+  scene: Profession['scenes'][number],
+  skillSlugs?: string[]
+): Promise<void> {
+  // 1) Install & enable required/selected skills (by slug)
+  // If skillSlugs is provided, use it. Otherwise, fall back to scene's required skills.
+  const targetSkillSlugs = skillSlugs || scene.skills.filter((s) => s.required).map((s) => s.slug);
+  
+  if (targetSkillSlugs.length > 0) {
     try {
       // Install (if available on ClawHub) and then enable the skills in Gateway
       // All operations are best-effort; individual failures are logged by main IPC handlers.
-      for (const slug of requiredSkillSlugs) {
+      for (const slug of targetSkillSlugs) {
         // Renderer will react to this event to perform install/enable via existing flows.
         // globalThis is typed loosely here to avoid adding Electron globals.
         const anyGlobal = globalThis as unknown as { mainWindow?: { webContents: { send: (ch: string, payload: unknown) => void } } };
@@ -650,6 +776,20 @@ async function autoSetupScene(profession: Profession, scene: Profession['scenes'
           message: '请每周整理过去一周与我业务方向相关的法律法规/典型案例要点，并按"法规更新 / 典型案例 / 实务影响"分栏输出。'
         });
       }
+    } else if (profession.id === 'researcher') {
+      if (scene.id === 'deep-research') {
+        cronTasks.push({
+          name: '每日行业趋势追踪',
+          schedule: '0 9 * * *',
+          message: '请帮我检索过去 24 小时内关于 AI 代理与大模型领域的 3 个重大新闻或技术突破，并简要说明其影响。'
+        });
+      }
+    } else if (profession.id === 'programmer') {
+      cronTasks.push({
+        name: '每周技术债务回顾',
+        schedule: '0 10 * * 5',
+        message: '请帮我梳理本周我在代码库中标记的 TODO 或 FIXME 事项，并按优先级给出下周的清理建议。'
+      });
     } else if (profession.id === 'teacher') {
       if (scene.id === 'lesson-preparation') {
         cronTasks.push({

@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 
 export function Chat() {
   const { t } = useTranslation('chat');
+  const { t: tCommon } = useTranslation('common');
   const gatewayStatus = useGatewayStore((s) => s.status);
   const isGatewayRunning = gatewayStatus.state === 'running';
 
@@ -34,6 +35,8 @@ export function Chat() {
   const sendMessage = useChatStore((s) => s.sendMessage);
   const abortRun = useChatStore((s) => s.abortRun);
   const clearError = useChatStore((s) => s.clearError);
+  const restartGateway = useGatewayStore((s) => s.restart);
+  const startGateway = useGatewayStore((s) => s.start);
 
   const cleanupEmptySession = useChatStore((s) => s.cleanupEmptySession);
 
@@ -79,13 +82,70 @@ export function Chat() {
 
   // Gateway not running
   if (!isGatewayRunning) {
+    const isStarting = gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting';
+    const isError = gatewayStatus.state === 'error';
+
     return (
       <div className="flex h-[calc(100vh-8rem)] flex-col items-center justify-center text-center p-8">
-        <AlertCircle className="h-12 w-12 text-yellow-500 mb-4" />
-        <h2 className="text-xl font-semibold mb-2">{t('gatewayNotRunning')}</h2>
-        <p className="text-muted-foreground max-w-md">
-          {t('gatewayRequired')}
+        <div className="relative mb-6">
+          {isStarting ? (
+            <div className="relative">
+              <Loader2 className="h-16 w-16 text-primary animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-primary/60" />
+              </div>
+            </div>
+          ) : isError ? (
+            <div className="bg-destructive/10 p-4 rounded-full">
+              <AlertCircle className="h-12 w-12 text-destructive" />
+            </div>
+          ) : (
+            <div className="bg-yellow-500/10 p-4 rounded-full">
+              <AlertCircle className="h-12 w-12 text-yellow-500" />
+            </div>
+          )}
+        </div>
+
+        <h2 className="text-2xl font-bold mb-3">
+          {isStarting ? t('chat:gatewayStarting') : isError ? t('chat:gatewayError') : t('chat:gatewayNotRunning')}
+        </h2>
+
+        <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
+          {isError ? (gatewayStatus.error || t('chat:gatewayRequired')) : t('chat:gatewayRequired')}
         </p>
+
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          {isError || gatewayStatus.state === 'stopped' ? (
+            <button
+              onClick={() => startGateway()}
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
+            >
+              {tCommon('actions.retry') || 'Retry'}
+            </button>
+          ) : isStarting ? (
+            <button
+              disabled
+              className="w-full bg-muted text-muted-foreground px-6 py-2.5 rounded-lg font-medium cursor-not-allowed opacity-70"
+            >
+              {tCommon('status.connecting') || 'Connecting...'}
+            </button>
+          ) : null}
+
+          {(isError || !isStarting) && (
+            <button
+              onClick={() => restartGateway()}
+              className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              {tCommon('actions.restart') || 'Force Restart Gateway'}
+            </button>
+          )}
+        </div>
+
+        {isStarting && (
+          <p className="mt-6 text-xs text-muted-foreground animate-pulse">
+            Starting up OpenClaw Gateway... this may take up to 30 seconds.
+          </p>
+        )}
       </div>
     );
   }
@@ -181,7 +241,7 @@ export function Chat() {
               onClick={clearError}
               className="text-xs text-destructive/60 hover:text-destructive underline"
             >
-              {t('common:actions.dismiss')}
+              {tCommon('actions.dismiss')}
             </button>
           </div>
         </div>

@@ -49,7 +49,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 6388,
   },
   build: {
     outDir: 'dist',

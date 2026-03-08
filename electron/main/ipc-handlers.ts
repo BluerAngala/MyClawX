@@ -235,9 +235,9 @@ async function registerProfessionHandlers(): Promise<void> {
   });
 
   // Apply a profession scene
-  ipcMain.handle('profession:applyScene', async (_, professionId: string, sceneId: string) => {
+  ipcMain.handle('profession:applyScene', async (_, professionId: string, sceneId: string, skillSlugs?: string[]) => {
     try {
-      const result = await applyProfessionScene(professionId, sceneId);
+      const result = await applyProfessionScene(professionId, sceneId, skillSlugs);
       return result;
     } catch (error) {
       console.error('Failed to apply profession scene:', error);
