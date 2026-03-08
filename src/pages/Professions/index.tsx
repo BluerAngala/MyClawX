@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, Check, Sparkles, Clock, Zap } from 'lucide-react
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { useProfessionsStore } from '@/stores/professions';
 import type { Profession, ProfessionScene } from '@/types/profession';
 
@@ -17,6 +18,7 @@ type Step = 'select-profession' | 'select-scene' | 'confirm';
 
 export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }: ProfessionsPageProps) {
   const { t: _t } = useTranslation('professions');
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>('select-profession');
   const [selectedProfession, setSelectedProfession] = useState<Profession | null>(null);
   const [selectedScene, setSelectedScene] = useState<ProfessionScene | null>(null);
@@ -24,14 +26,17 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
   const {
     professions,
+    userConfig,
     loading,
     fetchProfessions,
+    fetchUserConfig,
     applyScene,
   } = useProfessionsStore();
 
   useEffect(() => {
     void fetchProfessions();
-  }, [fetchProfessions]);
+    void fetchUserConfig();
+  }, [fetchProfessions, fetchUserConfig]);
 
   const handleSelectProfession = (profession: Profession) => {
     setSelectedProfession(profession);
@@ -49,7 +54,11 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
     const result = await applyScene(selectedProfession.id, selectedScene.id, selectedSkillSlugs);
     if (result.success) {
-      onComplete?.();
+      if (onComplete) {
+        onComplete();
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -176,10 +185,18 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                           <span>{profession.scenes.length} scenes</span>
                         </div>
                       </div>
-                      <Button className="mt-6 w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all" variant="secondary">
-                        开始配置
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </Button>
+                      <div className="flex gap-2 mt-6">
+                        <Button 
+                          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-all" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectProfession(profession);
+                          }}
+                        >
+                          {userConfig?.professionId === profession.id ? '继续选择场景' : '开始配置'}
+                          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

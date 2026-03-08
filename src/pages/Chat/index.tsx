@@ -5,8 +5,11 @@
  * are in the toolbar; messages render with markdown + streaming.
  */
 import { useEffect, useRef, useState } from 'react';
-import { AlertCircle, Bot, Loader2, MessageSquare, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertCircle, Bot, Loader2, MessageSquare, Sparkles, ArrowRight, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useChatStore, type RawMessage } from '@/stores/chat';
 import { useGatewayStore } from '@/stores/gateway';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -15,10 +18,13 @@ import { ChatInput } from './ChatInput';
 import { ChatToolbar } from './ChatToolbar';
 import { extractImages, extractText, extractThinking, extractToolUse } from './message-utils';
 import { useTranslation } from 'react-i18next';
+import { useProfessionsStore } from '@/stores/professions';
+import type { UserProfessionConfig, Profession, ProfessionScene, PromptTemplate } from '@/types/profession';
 
 export function Chat() {
   const { t } = useTranslation('chat');
   const { t: tCommon } = useTranslation('common');
+  const navigate = useNavigate();
   const gatewayStatus = useGatewayStore((s) => s.status);
   const isGatewayRunning = gatewayStatus.state === 'running';
 
@@ -40,6 +46,8 @@ export function Chat() {
 
   const cleanupEmptySession = useChatStore((s) => s.cleanupEmptySession);
 
+  const { userConfig, fetchUserConfig, professions, fetchProfessions } = useProfessionsStore();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [streamingTimestamp, setStreamingTimestamp] = useState<number>(0);
 
@@ -56,6 +64,10 @@ export function Chat() {
       await loadSessions();
       if (cancelled) return;
       await loadHistory(hasExistingMessages);
+      
+      // Load profession config
+      await fetchUserConfig();
+      await fetchProfessions();
     })();
     return () => {
       cancelled = true;
@@ -63,7 +75,7 @@ export function Chat() {
       // empty session so it doesn't linger as a ghost entry in the sidebar.
       cleanupEmptySession();
     };
-  }, [isGatewayRunning, loadHistory, loadSessions, cleanupEmptySession]);
+  }, [isGatewayRunning, loadHistory, loadSessions, cleanupEmptySession, fetchUserConfig, fetchProfessions]);
 
   // Auto-scroll on new messages, streaming, or activity changes
   useEffect(() => {
@@ -180,7 +192,12 @@ export function Chat() {
               <LoadingSpinner size="lg" />
             </div>
           ) : messages.length === 0 && !sending ? (
-            <WelcomeScreen />
+            <WelcomeScreen 
+              userConfig={userConfig} 
+              professions={professions} 
+              onSendMessage={sendMessage}
+              navigate={navigate}
+            />
           ) : (
             <>
               {messages.map((msg, idx) => (
@@ -260,32 +277,123 @@ export function Chat() {
 
 // ── Welcome Screen ──────────────────────────────────────────────
 
-function WelcomeScreen() {
+interface WelcomeScreenProps {
+  userConfig: UserProfessionConfig | null;
+  professions: Profession[];
+  onSendMessage: (message: string) => void;
+  navigate: ReturnType<typeof useNavigate>;
+}
+
+function WelcomeScreen({ userConfig, professions, onSendMessage, navigate }: WelcomeScreenProps) {
   const { t } = useTranslation('chat');
+  
+  const currentProfession = professions.find(p => p.id === userConfig?.professionId);
+  const currentScene = currentProfession?.scenes.find((s: ProfessionScene) => s.id === userConfig?.sceneId);
+  const templates = currentScene?.promptTemplates || [];
+
   return (
-    <div className="flex flex-col items-center justify-center text-center py-20">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+    <div className="flex flex-col items-center justify-center text-center py-10">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
         <Bot className="h-8 w-8 text-white" />
       </div>
-      <h2 className="text-2xl font-bold mb-2">{t('welcome.title')}</h2>
-      <p className="text-muted-foreground mb-8 max-w-md">
-        {t('welcome.subtitle')}
-      </p>
+      
+      {currentScene ? (
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <span className="text-3xl">{currentScene.icon}</span>
+            <h2 className="text-2xl font-bold tracking-tight">{currentScene.nameZh}</h2>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-colors ml-1"
+              onClick={() => navigate('/professions')}
+              title="切换场景"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
+            {currentScene.descriptionZh}
+          </p>
+        </div>
+      ) : (
+        <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <h2 className="text-3xl font-bold mb-3 tracking-tight">{t('welcome.title')}</h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            {t('welcome.subtitle')}
+          </p>
+          <Button 
+            variant="outline" 
+            className="rounded-full px-6 border-primary/20 hover:bg-primary/5 hover:border-primary/40 text-primary transition-all group"
+            onClick={() => navigate('/professions')}
+          >
+            <Sparkles className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+            选择专业场景，开启高效工作
+          </Button>
+        </div>
+      )}
 
-      <div className="grid grid-cols-2 gap-4 max-w-lg w-full">
-        {[
-          { icon: MessageSquare, title: t('welcome.askQuestions'), desc: t('welcome.askQuestionsDesc') },
-          { icon: Sparkles, title: t('welcome.creativeTasks'), desc: t('welcome.creativeTasksDesc') },
-        ].map((item, i) => (
-          <Card key={i} className="text-left">
-            <CardContent className="p-4">
-              <item.icon className="h-6 w-6 text-primary mb-2" />
-              <h3 className="font-medium">{item.title}</h3>
-              <p className="text-sm text-muted-foreground">{item.desc}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {templates.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+          {templates.map((template: PromptTemplate) => (
+            <Card 
+              key={template.id} 
+              className="text-left cursor-pointer hover:border-primary/50 hover:shadow-md transition-all group"
+              onClick={() => {
+                // Remove placeholders like {{topic}} for easier use, or just send as is
+                const cleanContent = template.content.replace(/\{\{.*?\}\}/g, '');
+                onSendMessage(cleanContent);
+              }}
+            >
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </div>
+                    <h3 className="font-bold text-sm">{template.nameZh}</h3>
+                  </div>
+                  <Badge variant="outline" className="text-[9px] opacity-50 uppercase tracking-tighter">
+                    {template.category}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed flex-1">
+                  {template.content.replace(/\{\{.*?\}\}/g, '___')}
+                </p>
+                <div className="mt-3 flex items-center justify-end text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  立即使用 <ArrowRight className="ml-1 h-3 w-3" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 max-w-lg w-full">
+          {[
+            { icon: MessageSquare, title: t('welcome.askQuestions'), desc: t('welcome.askQuestionsDesc') },
+            { icon: Sparkles, title: t('welcome.creativeTasks'), desc: t('welcome.creativeTasksDesc') },
+          ].map((item, i) => (
+            <Card key={i} className="text-left">
+              <CardContent className="p-4">
+                <item.icon className="h-6 w-6 text-primary mb-2" />
+                <h3 className="font-medium">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {currentScene && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="mt-8 text-muted-foreground hover:text-primary transition-colors"
+          onClick={() => navigate('/professions')}
+        >
+          切换职业场景
+        </Button>
+      )}
     </div>
   );
 }

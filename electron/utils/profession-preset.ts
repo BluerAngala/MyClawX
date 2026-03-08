@@ -205,7 +205,23 @@ const builtinLawyerScenes: ProfessionScene[] = [
         nameZh: '快速风险扫描',
         category: 'review',
         content:
-          '你是一名律师，请对以下合同进行快速风险扫描。\n\n合同背景：{{background}}\n委托方立场：{{client_side}}\n重点关注条款：{{focus_clauses}}\n\n请按照如下结构输出：\n1. 合同基本信息与结构概览\n2. 高风险条款列表（逐条列出，标明条款位置与风险点）\n3. 中风险条款列表\n4. 建议修改或补充的条款（给出现行表述与建议表述）\n5. 总体风险结论与签署建议',
+          '你是一名资深法务/律师，请对以下合同进行快速风险扫描，识别出对委托方不利的条款。\n\n合同内容：{{content}}\n委托方立场：{{client_side}}\n\n请按如下结构输出：\n1. 合同性质与核心义务概览\n2. 高风险条款（直接影响经济利益或责任分配）\n3. 建议修改方案（给出对比表述）\n4. 缺失的关键条款补充建议',
+      },
+      {
+        id: 'contract-compliance',
+        name: 'Compliance Check',
+        nameZh: '合规性审查',
+        category: 'review',
+        content:
+          '请审查以下合同内容是否符合相关法律法规要求：\n\n合同内容：{{content}}\n适用法律：{{laws}}\n关注重点：{{focus}}\n\n请识别潜在的合规性风险，并给出专业修正意见。',
+      },
+      {
+        id: 'contract-comparison',
+        name: 'Version Comparison',
+        nameZh: '合同版本比对',
+        category: 'review',
+        content:
+          '请对比以下两个合同版本（版本 A 与 版本 B），识别出实质性的修改点及其对我方的影响：\n\n版本 A：{{version_a}}\n版本 B：{{version_b}}\n\n请以表格形式列出差异，并给出应对策略。',
       },
       {
         id: 'clause-deep-dive',
