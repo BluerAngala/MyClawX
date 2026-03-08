@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ArrowLeft, Check, Sparkles, Clock, Zap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, Sparkles, Clock, Zap, Construction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { useProfessionsStore } from '@/stores/professions';
+import { useChatStore } from '@/stores/chat';
 import type { Profession, ProfessionScene } from '@/types/profession';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface ProfessionsPageProps {
   onComplete?: () => void;
@@ -16,7 +19,11 @@ interface ProfessionsPageProps {
 
 type Step = 'select-profession' | 'select-scene' | 'confirm';
 
-export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }: ProfessionsPageProps) {
+export default function ProfessionsPage({
+  onComplete,
+  onSkip,
+  showSkip = true,
+}: ProfessionsPageProps) {
   const { t: _t } = useTranslation('professions');
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('select-profession');
@@ -24,14 +31,9 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
   const [selectedScene, setSelectedScene] = useState<ProfessionScene | null>(null);
   const [selectedSkillSlugs, setSelectedSkillSlugs] = useState<string[]>([]);
 
-  const {
-    professions,
-    userConfig,
-    loading,
-    fetchProfessions,
-    fetchUserConfig,
-    applyScene,
-  } = useProfessionsStore();
+  const { professions, userConfig, loading, fetchProfessions, fetchUserConfig, applyScene } =
+    useProfessionsStore();
+  const { newSession } = useChatStore();
 
   useEffect(() => {
     void fetchProfessions();
@@ -39,13 +41,22 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
   }, [fetchProfessions, fetchUserConfig]);
 
   const handleSelectProfession = (profession: Profession) => {
+    // 只允许律师职业，其他职业提示开发中
+    if (profession.id !== 'lawyer') {
+      toast.info('该职业场景正在开发中，请有志之士一起努力！', {
+        description: '目前仅开放律师职业场景，其他场景即将上线',
+        icon: <Construction className="h-4 w-4" />,
+        duration: 4000,
+      });
+      return;
+    }
     setSelectedProfession(profession);
     setStep('select-scene');
   };
 
   const handleSelectScene = (scene: ProfessionScene) => {
     setSelectedScene(scene);
-    setSelectedSkillSlugs(scene.skills.map(s => s.slug));
+    setSelectedSkillSlugs(scene.skills.map((s) => s.slug));
     setStep('confirm');
   };
 
@@ -62,12 +73,24 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
     }
   };
 
+  const handleQuickUse = async (scene: ProfessionScene) => {
+    if (!selectedProfession) return;
+
+    const skillSlugs = scene.skills.map((s) => s.slug);
+    const result = await applyScene(selectedProfession.id, scene.id, skillSlugs);
+    if (result.success) {
+      toast.success(`已启用场景：${scene.nameZh}`);
+      newSession();
+      navigate('/chat');
+    }
+  };
+
   const toggleSkill = (slug: string) => {
-    const skill = selectedScene?.skills.find(s => s.slug === slug);
+    const skill = selectedScene?.skills.find((s) => s.slug === slug);
     if (skill?.required) return; // Cannot toggle required skills
 
-    setSelectedSkillSlugs(prev => 
-      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
+    setSelectedSkillSlugs((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
   };
 
@@ -122,9 +145,15 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
         {/* Progress */}
         <div className="mb-8 flex justify-center gap-2">
-          <div className={`h-2 w-24 rounded-full ${step === 'select-profession' ? 'bg-primary' : 'bg-primary/30'}`} />
-          <div className={`h-2 w-24 rounded-full ${step === 'select-scene' ? 'bg-primary' : step === 'confirm' ? 'bg-primary/30' : 'bg-muted'}`} />
-          <div className={`h-2 w-24 rounded-full ${step === 'confirm' ? 'bg-primary' : 'bg-muted'}`} />
+          <div
+            className={`h-2 w-24 rounded-full ${step === 'select-profession' ? 'bg-primary' : 'bg-primary/30'}`}
+          />
+          <div
+            className={`h-2 w-24 rounded-full ${step === 'select-scene' ? 'bg-primary' : step === 'confirm' ? 'bg-primary/30' : 'bg-muted'}`}
+          />
+          <div
+            className={`h-2 w-24 rounded-full ${step === 'confirm' ? 'bg-primary' : 'bg-muted'}`}
+          />
         </div>
 
         {/* Content */}
@@ -138,11 +167,10 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
         ) : professions.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
             <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                暂未检测到任何职业预设配置。
-              </p>
+              <p className="text-sm text-muted-foreground">暂未检测到任何职业预设配置。</p>
               <p className="text-xs text-muted-foreground">
-                请确认应用安装包中包含 <code>resources/professions/*.json</code>，或稍后通过更新版本获取。
+                请确认应用安装包中包含 <code>resources/professions/*.json</code>
+                ，或稍后通过更新版本获取。
               </p>
             </div>
           </div>
@@ -151,62 +179,105 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
             {/* Step 1: Select Profession */}
             {step === 'select-profession' && (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                {professions.map((profession) => (
-                  <Card
-                    key={profession.id}
-                    className="group relative flex flex-col overflow-hidden border-none bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-2xl hover:-translate-y-1"
-                    onClick={() => handleSelectProfession(profession)}
-                  >
-                    <div className={`absolute inset-0 opacity-5 bg-gradient-to-br from-${profession.color}-500 to-transparent transition-opacity group-hover:opacity-10`} />
-                    <CardHeader className="pb-3 relative z-10">
-                      <div className="flex items-start justify-between">
-                        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-${profession.color}-500/10 text-4xl transition-transform group-hover:scale-110 group-hover:rotate-3`}>
-                          {profession.icon}
+                {professions.map((profession) => {
+                  const isLawyer = profession.id === 'lawyer';
+                  return (
+                    <Card
+                      key={profession.id}
+                      className={cn(
+                        'group relative flex flex-col overflow-hidden border-none bg-card/50 backdrop-blur-sm transition-all',
+                        isLawyer
+                          ? 'hover:bg-card hover:shadow-2xl hover:-translate-y-1 cursor-pointer'
+                          : 'opacity-60 grayscale cursor-not-allowed'
+                      )}
+                      onClick={() => handleSelectProfession(profession)}
+                    >
+                      <div
+                        className={`absolute inset-0 opacity-5 bg-gradient-to-br from-${profession.color}-500 to-transparent transition-opacity ${isLawyer ? 'group-hover:opacity-10' : ''}`}
+                      />
+                      <CardHeader className="pb-3 relative z-10">
+                        <div className="flex items-start justify-between">
+                          <div
+                            className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-${profession.color}-500/10 text-4xl transition-transform ${isLawyer ? 'group-hover:scale-110 group-hover:rotate-3' : ''}`}
+                          >
+                            {profession.icon}
+                          </div>
+                          {profession.tag && isLawyer && (
+                            <Badge
+                              className={`${getTagColor(profession.tag)} border-none px-3 py-1 text-[10px] font-bold uppercase tracking-widest`}
+                            >
+                              {getTagLabel(profession.tag)}
+                            </Badge>
+                          )}
+                          {!isLawyer && (
+                            <Badge className="bg-gray-100 text-gray-600 border-none px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                              <Construction className="mr-1 h-3 w-3" />
+                              开发中
+                            </Badge>
+                          )}
                         </div>
-                        {profession.tag && (
-                          <Badge className={`${getTagColor(profession.tag)} border-none px-3 py-1 text-[10px] font-bold uppercase tracking-widest`}>
-                            {getTagLabel(profession.tag)}
-                          </Badge>
-                        )}
-                      </div>
-                      <CardTitle className="mt-4 text-xl font-bold tracking-tight">{profession.nameZh}</CardTitle>
-                      <CardDescription className="line-clamp-2 text-sm leading-relaxed">
-                        {profession.descriptionZh}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="mt-auto relative z-10">
-                      <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground/70">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>{profession.estimatedSetupTime} min</span>
+                        <CardTitle className="mt-4 text-xl font-bold tracking-tight">
+                          {profession.nameZh}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2 text-sm leading-relaxed">
+                          {profession.descriptionZh}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="mt-auto relative z-10">
+                        <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground/70">
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{profession.estimatedSetupTime} min</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                            <span>{profession.scenes.length} scenes</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <Zap className="h-3.5 w-3.5 text-yellow-500" />
-                          <span>{profession.scenes.length} scenes</span>
+                        <div className="flex gap-2 mt-6">
+                          <Button
+                            className={cn(
+                              'flex-1 transition-all',
+                              isLawyer
+                                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                : 'bg-muted text-muted-foreground cursor-not-allowed'
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectProfession(profession);
+                            }}
+                            disabled={!isLawyer}
+                          >
+                            {isLawyer ? (
+                              <>
+                                {userConfig?.professionId === profession.id
+                                  ? '继续选择场景'
+                                  : '开始配置'}
+                                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                              </>
+                            ) : (
+                              <>
+                                <Construction className="mr-2 h-4 w-4" />
+                                开发中
+                              </>
+                            )}
+                          </Button>
                         </div>
-                      </div>
-                      <div className="flex gap-2 mt-6">
-                        <Button 
-                          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 transition-all" 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectProfession(profession);
-                          }}
-                        >
-                          {userConfig?.professionId === profession.id ? '继续选择场景' : '开始配置'}
-                          <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
 
             {/* Step 2: Select Scene */}
             {step === 'select-scene' && selectedProfession && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                <Button variant="ghost" onClick={handleBack} className="mb-2 hover:bg-transparent hover:text-primary">
+                <Button
+                  variant="ghost"
+                  onClick={handleBack}
+                  className="mb-2 hover:bg-transparent hover:text-primary"
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   返回职业选择
                 </Button>
@@ -218,62 +289,96 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                       className="group cursor-pointer border-none bg-card/50 backdrop-blur-sm transition-all hover:bg-card hover:shadow-xl"
                       onClick={() => handleSelectScene(scene)}
                     >
-                      <CardHeader className="pb-4">
-                        <div className="flex items-start gap-6">
-                          <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-primary/5 text-4xl transition-transform group-hover:scale-105">
-                            {scene.icon}
-                          </div>
-                          <div className="flex-1 space-y-1">
-                            <CardTitle className="text-xl font-bold">{scene.nameZh}</CardTitle>
-                            <CardDescription className="text-sm leading-relaxed">
-                              {scene.descriptionZh}
-                            </CardDescription>
-                            <div className="pt-2 flex flex-wrap gap-2">
-                              {scene.skills.slice(0, 3).map((skill) => (
-                                <Badge key={skill.slug} variant="outline" className="text-[10px] opacity-70">
-                                  {skill.slug}
-                                </Badge>
-                              ))}
-                              {scene.skills.length > 3 && (
-                                <Badge variant="outline" className="text-[10px] opacity-70">
-                                  +{scene.skills.length - 3}
-                                </Badge>
-                              )}
+                      <CardContent className="p-6">
+                        <div className="grid gap-6 lg:grid-cols-3">
+                          <div className="lg:col-span-2 space-y-4">
+                            <div className="flex gap-4">
+                              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-3xl transition-transform group-hover:scale-105">
+                                {scene.icon}
+                              </div>
+                              <div className="flex-1 space-y-2">
+                                <CardTitle className="text-lg font-bold">{scene.nameZh}</CardTitle>
+                                <CardDescription className="text-sm leading-relaxed">
+                                  {scene.descriptionZh}
+                                </CardDescription>
+                                <div className="flex flex-wrap gap-2">
+                                  {scene.skills.slice(0, 3).map((skill) => (
+                                    <Badge
+                                      key={skill.slug}
+                                      variant="outline"
+                                      className="text-[10px] opacity-70"
+                                    >
+                                      {skill.slug}
+                                    </Badge>
+                                  ))}
+                                  {scene.skills.length > 3 && (
+                                    <Badge variant="outline" className="text-[10px] opacity-70">
+                                      +{scene.skills.length - 3}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
+                                <Sparkles className="h-3 w-3 text-primary" />
+                                典型使用场景
+                              </p>
+                              <ul className="space-y-2">
+                                {scene.useCasesZh.map((useCase, index) => (
+                                  <li
+                                    key={index}
+                                    className="flex items-start gap-3 text-sm text-muted-foreground/90"
+                                  >
+                                    <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/50" />
+                                    {useCase}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
                           </div>
-                          <Button variant="secondary" className="group-hover:bg-primary group-hover:text-primary-foreground">
-                            配置此场景
-                            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid gap-6 md:grid-cols-2">
-                          <div className="space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
-                              <Sparkles className="h-3 w-3 text-primary" />
-                              典型使用场景
-                            </p>
-                            <ul className="space-y-2">
-                              {scene.useCasesZh.map((useCase, index) => (
-                                <li key={index} className="flex items-start gap-3 text-sm text-muted-foreground/90">
-                                  <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary/50" />
-                                  {useCase}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="space-y-3">
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
-                              <Zap className="h-3 w-3 text-yellow-500" />
-                              包含 AI 能力
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {scene.promptTemplates.map((template) => (
-                                <Badge key={template.id} variant="secondary" className="bg-primary/5 text-primary border-none">
-                                  {template.nameZh}
-                                </Badge>
-                              ))}
+
+                          <div className="space-y-4">
+                            <div className="space-y-3">
+                              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-2">
+                                <Zap className="h-3 w-3 text-yellow-500" />
+                                包含 AI 能力
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {scene.promptTemplates.map((template) => (
+                                  <Badge
+                                    key={template.id}
+                                    variant="secondary"
+                                    className="bg-primary/5 text-primary border-none"
+                                  >
+                                    {template.nameZh}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col gap-2 pt-4">
+                              <Button
+                                variant="secondary"
+                                className="w-full group-hover:bg-primary group-hover:text-primary-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectScene(scene);
+                                }}
+                              >
+                                配置此场景
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                className="w-full group-hover:bg-primary group-hover:text-primary-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleQuickUse(scene);
+                                }}
+                              >
+                                立刻使用
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -287,13 +392,19 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
             {/* Step 3: Confirm */}
             {step === 'confirm' && selectedProfession && selectedScene && (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                <Button variant="ghost" onClick={handleBack} className="mb-2 hover:bg-transparent hover:text-primary">
+                <Button
+                  variant="ghost"
+                  onClick={handleBack}
+                  className="mb-2 hover:bg-transparent hover:text-primary"
+                >
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   返回场景选择
                 </Button>
 
                 <Card className="overflow-hidden border-none bg-card/50 backdrop-blur-sm shadow-2xl">
-                  <div className={`h-2 w-full bg-gradient-to-r from-${selectedProfession.color}-500 to-primary`} />
+                  <div
+                    className={`h-2 w-full bg-gradient-to-r from-${selectedProfession.color}-500 to-primary`}
+                  />
                   <CardHeader className="pb-4">
                     <CardTitle className="text-2xl font-bold">配置预览</CardTitle>
                     <CardDescription>应用后将为您自动配置以下 AI 技能与工作流</CardDescription>
@@ -301,7 +412,9 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                   <CardContent className="space-y-8">
                     {/* Profession Summary */}
                     <div className="flex items-center gap-6 rounded-2xl bg-muted/30 p-6">
-                      <div className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-${selectedProfession.color}-500/10 text-5xl shadow-inner`}>
+                      <div
+                        className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-${selectedProfession.color}-500/10 text-5xl shadow-inner`}
+                      >
                         {selectedProfession.icon}
                       </div>
                       <div className="space-y-1">
@@ -320,7 +433,9 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                         </div>
                         <div>
                           <h4 className="text-xl font-bold">{selectedScene.nameZh}</h4>
-                          <p className="text-sm text-muted-foreground">{selectedScene.descriptionZh}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedScene.descriptionZh}
+                          </p>
                         </div>
                       </div>
 
@@ -331,7 +446,10 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                             <Zap className="h-3 w-3 text-yellow-500" />
                             自动化技能配置
                           </p>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px] font-bold">
+                          <Badge
+                            variant="secondary"
+                            className="bg-primary/10 text-primary border-none text-[10px] font-bold"
+                          >
                             {selectedSkillSlugs.length} 技能已激活
                           </Badge>
                         </div>
@@ -341,19 +459,29 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                             return (
                               <Badge
                                 key={skill.slug}
-                                variant={isSelected ? (skill.required ? 'default' : 'secondary') : 'outline'}
+                                variant={
+                                  isSelected
+                                    ? skill.required
+                                      ? 'default'
+                                      : 'secondary'
+                                    : 'outline'
+                                }
                                 className={`cursor-pointer px-4 py-2 text-xs transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                                  skill.required 
-                                    ? 'cursor-not-allowed shadow-md' 
-                                    : isSelected 
-                                      ? 'bg-primary/20 text-primary border-primary/20 hover:bg-primary/30' 
+                                  skill.required
+                                    ? 'cursor-not-allowed shadow-md'
+                                    : isSelected
+                                      ? 'bg-primary/20 text-primary border-primary/20 hover:bg-primary/30'
                                       : 'opacity-40 grayscale-[0.5] hover:opacity-100 hover:grayscale-0'
                                 }`}
                                 onClick={() => toggleSkill(skill.slug)}
                               >
                                 {skill.required && <Check className="mr-1.5 h-3.5 w-3.5" />}
                                 {skill.description || skill.slug}
-                                {skill.required && <span className="ml-1.5 text-[10px] opacity-60 font-bold">(必需)</span>}
+                                {skill.required && (
+                                  <span className="ml-1.5 text-[10px] opacity-60 font-bold">
+                                    (必需)
+                                  </span>
+                                )}
                               </Badge>
                             );
                           })}
@@ -382,7 +510,10 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
                                 </div>
                                 <span className="text-sm font-semibold">{template.nameZh}</span>
                               </div>
-                              <Badge variant="outline" className="text-[9px] font-bold uppercase tracking-tighter opacity-50 group-hover:opacity-100 transition-opacity">
+                              <Badge
+                                variant="outline"
+                                className="text-[9px] font-bold uppercase tracking-tighter opacity-50 group-hover:opacity-100 transition-opacity"
+                              >
                                 {template.category}
                               </Badge>
                             </div>
@@ -393,10 +524,18 @@ export default function ProfessionsPage({ onComplete, onSkip, showSkip = true }:
 
                     {/* Actions */}
                     <div className="flex gap-4 pt-4">
-                      <Button variant="ghost" onClick={handleBack} className="flex-1 h-12 text-muted-foreground hover:bg-muted/50">
+                      <Button
+                        variant="ghost"
+                        onClick={handleBack}
+                        className="flex-1 h-12 text-muted-foreground hover:bg-muted/50"
+                      >
                         返回修改
                       </Button>
-                      <Button onClick={handleApply} className="flex-[2] h-12 text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" disabled={loading}>
+                      <Button
+                        onClick={handleApply}
+                        className="flex-[2] h-12 text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]"
+                        disabled={loading}
+                      >
                         {loading ? (
                           <>
                             <div className="mr-3 h-5 w-5 animate-spin rounded-full border-3 border-current border-t-transparent" />

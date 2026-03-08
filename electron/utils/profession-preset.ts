@@ -202,41 +202,17 @@ const builtinLawyerScenes: ProfessionScene[] = [
       {
         id: 'contract-quick-scan',
         name: 'Quick Risk Scan',
-        nameZh: '快速风险扫描',
+        nameZh: '合同风险扫描',
         category: 'review',
         content:
-          '你是一名资深法务/律师，请对以下合同进行快速风险扫描，识别出对委托方不利的条款。\n\n合同内容：{{content}}\n委托方立场：{{client_side}}\n\n请按如下结构输出：\n1. 合同性质与核心义务概览\n2. 高风险条款（直接影响经济利益或责任分配）\n3. 建议修改方案（给出对比表述）\n4. 缺失的关键条款补充建议',
-      },
-      {
-        id: 'contract-compliance',
-        name: 'Compliance Check',
-        nameZh: '合规性审查',
-        category: 'review',
-        content:
-          '请审查以下合同内容是否符合相关法律法规要求：\n\n合同内容：{{content}}\n适用法律：{{laws}}\n关注重点：{{focus}}\n\n请识别潜在的合规性风险，并给出专业修正意见。',
-      },
-      {
-        id: 'contract-comparison',
-        name: 'Version Comparison',
-        nameZh: '合同版本比对',
-        category: 'review',
-        content:
-          '请对比以下两个合同版本（版本 A 与 版本 B），识别出实质性的修改点及其对我方的影响：\n\n版本 A：{{version_a}}\n版本 B：{{version_b}}\n\n请以表格形式列出差异，并给出应对策略。',
-      },
-      {
-        id: 'clause-deep-dive',
-        name: 'Clause Deep Dive',
-        nameZh: '重点条款深度分析',
-        category: 'analysis',
-        content:
-          '请针对合同中的以下条款进行重点分析：\n\n条款原文：{{clause_text}}\n委托方立场：{{client_side}}\n适用场景：{{scenario}}\n\n分析要求：\n1. 用通俗语言解释条款含义\n2. 从委托方立场列出可能的法律 / 商务风险\n3. 说明该条款在常见市场实践中的通常写法\n4. 给出 1-2 个建议修改版本（标注“保守版 / 平衡版”）\n5. 列出需要与对方进一步沟通确认的问题',
+          '你是一名资深律师，请对以下合同进行快速风险扫描，识别出对委托方不利的条款。\n\n合同内容：{{content}}\n委托方立场：{{client_side}}\n\n请按如下结构输出：\n1. 合同性质与核心义务概览\n2. 高风险条款（直接影响经济利益或责任分配）\n3. 建议修改方案（给出对比表述）\n4. 缺失的关键条款补充建议',
       },
     ] as PromptTemplate[],
   },
   {
     id: 'legal-research',
     name: 'Legal Research',
-    nameZh: '法律检索与要点整理',
+    nameZh: '法律检索',
     description: 'Search, aggregate and structure legal information for a given question',
     descriptionZh: '围绕具体法律问题进行多来源检索与要点整理',
     icon: '📚',
@@ -253,17 +229,17 @@ const builtinLawyerScenes: ProfessionScene[] = [
       {
         id: 'research-memo',
         name: 'Research Memo',
-        nameZh: '检索备忘录结构',
+        nameZh: '法律检索备忘录',
         category: 'memo',
         content:
-          '请围绕以下法律问题撰写一份“检索备忘录”草稿：\n\n问题概述：{{question}}\n涉及标的 / 金额 / 领域：{{context}}\n\n输出结构：\n1. 问题重述（用通俗语言概括 3-5 句话）\n2. 关键法律关系与争点拆分\n3. 适用法律法规条文列表（按层级分组）\n4. 代表性案例要点摘要（每案 3-5 行，包含裁判要点）\n5. 初步判断与论证思路（列出正反两种观点及支持理由）\n6. 后续需要补充查证的事项清单',
+          '请围绕以下法律问题撰写一份检索备忘录：\n\n问题概述：{{question}}\n涉及标的 / 金额 / 领域：{{context}}\n\n输出结构：\n1. 问题重述（用通俗语言概括 3-5 句话）\n2. 关键法律关系与争点拆分\n3. 适用法律法规条文列表（按层级分组）\n4. 代表性案例要点摘要（每案 3-5 行，包含裁判要点）\n5. 初步判断与论证思路（列出正反两种观点及支持理由）\n6. 后续需要补充查证的事项清单',
       },
     ] as PromptTemplate[],
   },
   {
     id: 'litigation-drafting',
     name: 'Litigation Drafting',
-    nameZh: '诉讼文书起草',
+    nameZh: '文书起草',
     description: 'Draft statements of claim, defenses and other key pleadings',
     descriptionZh: '根据案情要点起草起诉状、答辩状等核心诉讼文书',
     icon: '📝',
@@ -280,18 +256,10 @@ const builtinLawyerScenes: ProfessionScene[] = [
       {
         id: 'complaint-draft',
         name: 'Statement of Claim',
-        nameZh: '起诉状草稿',
+        nameZh: '起诉状起草',
         category: 'draft',
         content:
           '请根据以下案情要点起草一份起诉状初稿（不含法院抬头和当事人信息模板）：\n\n案由：{{cause}}\n当事人关系与基本情况：{{parties}}\n事实与时间线：{{facts}}\n主要证据：{{evidence}}\n诉讼请求：{{claims}}\n\n请按如下结构输出正文：\n1. 事实与理由（按时间顺序分段撰写，并在关键节点标注证据编号）\n2. 法律依据（列出主要适用法条，并用自然语言解释适用逻辑）\n3. 结语（简要重申诉讼请求与法院应支持的理由）',
-      },
-      {
-        id: 'defense-draft',
-        name: 'Defense Brief',
-        nameZh: '答辩状草稿',
-        category: 'draft',
-        content:
-          '请根据以下信息起草一份答辩状初稿（不含法院与当事人抬头模板）：\n\n对方起诉状主要主张：{{plaintiff_claims}}\n我方基本立场：{{defendant_position}}\n我方掌握的关键事实与证据：{{defendant_facts}}\n\n输出结构：\n1. 对对方事实陈述的逐点回应（注明“同意 / 不完全同意 / 不予认可”等态度）\n2. 我方独立陈述的事实与证据（按时间线梳理）\n3. 法律依据与抗辩事由（分点列出，每点对应事实与证据）\n4. 结语与具体请求（如驳回全部 / 部分诉讼请求等）',
       },
     ] as PromptTemplate[],
   },
@@ -785,12 +753,50 @@ async function autoSetupScene(
         });
       }
 } else if (profession.id === 'lawyer') {
-      if (scene.id === 'legal-research') {
-        cronTasks.push({
-          name: '每周法律动态速览',
-          schedule: '0 8 * * 1',
-          message: '请每周整理过去一周与我业务方向相关的法律法规/典型案例要点，并按"法规更新 / 典型案例 / 实务影响"分栏输出。'
-        });
+      // 律师职业 - 合同审查场景
+      if (scene.id === 'contract-review') {
+        cronTasks.push(
+          {
+            name: '每周合同审查清单',
+            schedule: '0 9 * * 1',
+            message: '请帮我梳理本周待审查的合同清单，按优先级排序，并为每份合同提供初步审查要点提示。'
+          },
+          {
+            name: '每月合同模板更新检查',
+            schedule: '0 10 1 * *',
+            message: '请检查我常用的合同模板是否需要根据最新法律法规更新，并给出修改建议。'
+          }
+        );
+      }
+      // 律师职业 - 法律检索场景
+      else if (scene.id === 'legal-research') {
+        cronTasks.push(
+          {
+            name: '每周法律动态速览',
+            schedule: '0 8 * * 1',
+            message: '请每周整理过去一周与我业务方向相关的法律法规/典型案例要点，并按"法规更新 / 典型案例 / 实务影响"分栏输出。'
+          },
+          {
+            name: '每日热点案例追踪',
+            schedule: '0 9 * * *',
+            message: '请检索过去24小时内与我专业领域相关的热点案例或法律新闻，并提供简要分析。'
+          }
+        );
+      }
+      // 律师职业 - 诉讼文书场景
+      else if (scene.id === 'litigation-drafting') {
+        cronTasks.push(
+          {
+            name: '每周案件进展梳理',
+            schedule: '0 18 * * 5',
+            message: '请帮我梳理本周所有在办案件的进展情况，列出下周需要完成的文书工作和时间节点提醒。'
+          },
+          {
+            name: '每日庭审准备提醒',
+            schedule: '0 8 * * *',
+            message: '请检查未来3天内是否有庭审安排，并为我准备庭审要点提示和需携带的材料清单。'
+          }
+        );
       }
     } else if (profession.id === 'researcher') {
       if (scene.id === 'deep-research') {

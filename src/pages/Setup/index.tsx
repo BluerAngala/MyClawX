@@ -20,6 +20,7 @@ import {
   ExternalLink,
   Copy,
   Sparkles,
+  Construction,
 } from 'lucide-react';
 import { TitleBar } from '@/components/layout/TitleBar';
 import { Button } from '@/components/ui/button';
@@ -369,37 +370,61 @@ function ProfessionContent({ onConfiguredChange }: ProfessionContentProps) {
 
       {!selectedProfession ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {professions.map((profession) => (
-            <Card
-              key={profession.id}
-              className="cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
-              onClick={() => setSelectedProfession(profession.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <span className="text-4xl">{profession.icon}</span>
-                  {profession.tag === 'popular' && (
-                    <Badge className="bg-orange-100 text-orange-700">
-                      热门
-                    </Badge>
-                  )}
-                  {profession.tag === 'new' && (
-                    <Badge className="bg-blue-100 text-blue-700">
-                      新上线
-                    </Badge>
-                  )}
-                </div>
-                <CardTitle className="mt-2">{profession.nameZh}</CardTitle>
-                <CardDescription>{profession.descriptionZh}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>{profession.estimatedSetupTime}分钟设置</span>
-                  <span>{profession.scenes.length}个场景</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {professions.map((profession) => {
+            const isLawyer = profession.id === 'lawyer';
+            return (
+              <Card
+                key={profession.id}
+                className={cn(
+                  'cursor-pointer transition-all',
+                  isLawyer
+                    ? 'hover:shadow-lg hover:border-primary/50'
+                    : 'opacity-60 grayscale cursor-not-allowed'
+                )}
+                onClick={() => {
+                  if (isLawyer) {
+                    setSelectedProfession(profession.id);
+                  } else {
+                    toast.info('该职业场景正在开发中，请有志之士一起努力！', {
+                      description: '目前仅开放律师职业场景，其他场景即将上线',
+                      icon: <Construction className="h-4 w-4" />,
+                      duration: 4000,
+                    });
+                  }
+                }}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <span className="text-4xl">{profession.icon}</span>
+                    {profession.tag === 'popular' && (
+                      <Badge className="bg-orange-100 text-orange-700">
+                        热门
+                      </Badge>
+                    )}
+                    {profession.tag === 'new' && (
+                      <Badge className="bg-blue-100 text-blue-700">
+                        新上线
+                      </Badge>
+                    )}
+                    {!isLawyer && (
+                      <Badge className="bg-gray-100 text-gray-600">
+                        <Construction className="mr-1 h-3 w-3" />
+                        开发中
+                      </Badge>
+                    )}
+                  </div>
+                  <CardTitle className="mt-2">{profession.nameZh}</CardTitle>
+                  <CardDescription>{profession.descriptionZh}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span>{profession.estimatedSetupTime}分钟设置</span>
+                    <span>{profession.scenes.length}个场景</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="space-y-4">
