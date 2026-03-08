@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="src/assets/logo.svg" width="128" height="128" alt="MyClawX Logo" />
 </p>
@@ -6,378 +5,100 @@
 <h1 align="center">MyClawX</h1>
 
 <p align="center">
-  <strong>The Desktop Interface for OpenClaw AI Agents</strong>
+  <strong>基于 OpenClaw 二次开发的图形化 AI 助手</strong>
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#why-clawx">Why MyClawX</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#development">Development</a> •
-  <a href="#contributing">Contributing</a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/platform-MacOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform" />
-  <img src="https://img.shields.io/badge/electron-40+-47848F?logo=electron" alt="Electron" />
-  <img src="https://img.shields.io/badge/react-19-61DAFB?logo=react" alt="React" />
-  <a href="https://discord.com/invite/84Kex3GGAh" target="_blank">
-  <img src="https://img.shields.io/discord/1399603591471435907?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb" alt="chat on Discord" />
-  </a>
-  <img src="https://img.shields.io/github/downloads/ValueCell-ai/MyClawX/total?color=%23027DEB" alt="Downloads" />
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
-</p>
-
-<p align="center">
-  English | <a href="README.zh-CN.md">简体中文</a> | <a href="README.ja-JP.md">日本語</a>
+  简体中文 | <a href="README.md">English</a>
 </p>
 
 ---
 
-## Overview
+## 项目简介
 
-**MyClawX** bridges the gap between powerful AI agents and everyday users. Built on top of [OpenClaw](https://github.com/OpenClaw), it transforms command-line AI orchestration into an accessible, beautiful desktop experience—no terminal required.
+**MyClawX** 是一个基于 [OpenClaw](https://github.com/OpenClaw) 二次开发的图形化桌面应用。我们的目标是为普通用户提供一个**零门槛、易上手**的 AI 自动化工具。
 
-Whether you're automating workflows, managing AI-powered channels, or scheduling intelligent tasks, MyClawX provides the interface you need to harness AI agents effectively.
+相较于原始项目，MyClawX 更加注重小白用户的体验，通过直观的图形界面取代复杂的命令行操作，让每个人都能轻松驾驭强大的 AI Agent。
 
-MyClawX comes pre-configured with best-practice model providers and natively supports Windows as well as multi-language settings. Of course, you can also fine-tune advanced configurations via **Settings → Advanced → Developer Mode**.
+### 核心亮点
 
----
-## Screenshot
-
-<p align="center">
-  <img src="resources/screenshot/chat.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/cron_task.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/skills.png" style="width: 100%; height: auto;">
-</p>
-
-<!-- <p align="center">
-  <img src="resources/screenshot/channels.png" style="width: 100%; height: auto;">
-</p> -->
-
-<p align="center">
-  <img src="resources/screenshot/dashboard.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/settings.png" style="width: 100%; height: auto;">
-</p>
+- **面向小白设计**：全图形化操作，无需了解任何编程知识或终端命令。
+- **深度场景自动化**：内置针对不同**职业**（如内容创作者、律师等）和**场景**优化的预设方案。
+- **开箱即用**：内置环境管理，自动配置 Python 运行环境，实现真正的“一键启动”。
+- **深度集成**：无缝对接 OpenClaw 强大的插件生态，支持多渠道（飞书、钉钉、微信等）自动化。
 
 ---
 
-## Why MyClawX
+## 主要功能
 
-Building AI agents shouldn't require mastering the command line. MyClawX was designed with a simple philosophy: **powerful technology deserves an interface that respects your time.**
+### 🎯 职业与场景预设
+支持按职业定制 AI 行为。无论你是需要辅助文案创作，还是进行法律条文检索，MyClawX 都能提供深度的自动化支持。
 
-| Challenge | MyClawX Solution |
-|-----------|----------------|
-| Complex CLI setup | One-click installation with guided setup wizard |
-| Configuration files | Visual settings with real-time validation |
-| Process management | Automatic gateway lifecycle management |
-| Multiple AI providers | Unified provider configuration panel |
-| Skill/plugin installation | Built-in skill marketplace and management |
+### 💬 极简聊天体验
+现代化的聊天界面，支持 Markdown 渲染，让 AI 交互像使用社交软件一样自然。
 
-### OpenClaw Inside
+### ⏰ 智能定时任务
+通过图形化界面配置 Cron 任务，让 AI 代理在后台为你 7x24 小时工作，自动处理资讯、监控数据或发送提醒。
 
-MyClawX is built directly upon the official **OpenClaw** core. Instead of requiring a separate installation, we embed the runtime within the application to provide a seamless "battery-included" experience.
+### 🧩 技能一键扩展
+集成技能市场，无需配置复杂的 package.json，点点鼠标即可为你的 AI 助手增加新功能。
 
-We are committed to maintaining strict alignment with the upstream OpenClaw project, ensuring that you always have access to the latest capabilities, stability improvements, and ecosystem compatibility provided by the official releases.
-
----
-
-## Features
-
-### 🎯 Zero Configuration Barrier
-Complete the entire setup—from installation to your first AI interaction—through an intuitive graphical interface. No terminal commands, no YAML files, no environment variable hunting.
-
-### 💬 Intelligent Chat Interface
-Communicate with AI agents through a modern chat experience. Support for multiple conversation contexts, message history, and rich content rendering with Markdown.
-
-### 📡 Multi-Channel Management
-Configure and monitor multiple AI channels simultaneously. Each channel operates independently, allowing you to run specialized agents for different tasks.
-
-### ⏰ Cron-Based Automation
-Schedule AI tasks to run automatically. Define triggers, set intervals, and let your AI agents work around the clock without manual intervention.
-
-### 🧩 Extensible Skill System
-Extend your AI agents with pre-built skills. Browse, install, and manage skills through the integrated skill panel—no package managers required.
-
-### 🔐 Secure Provider Integration
-Connect to multiple AI providers (OpenAI, Anthropic, and more) with credentials stored securely in your system's native keychain.
-
-### 🌙 Adaptive Theming
-Light mode, dark mode, or system-synchronized themes. MyClawX adapts to your preferences automatically.
+### 🔐 安全与隐私
+API 密钥等敏感信息存储在系统原生的安全保险箱中，所有 AI 推理逻辑支持本地运行，保护您的隐私。
 
 ---
 
-## Getting Started
+## 快速开始
 
-### System Requirements
+### 系统要求
 
-- **Operating System**: macOS 11+, Windows 10+, or Linux (Ubuntu 20.04+)
-- **Memory**: 4GB RAM minimum (8GB recommended)
-- **Storage**: 1GB available disk space
+- **操作系统**: Windows 10+, macOS 11+, 或 Linux (Ubuntu 20.04+)
+- **内存**: 4GB RAM (推荐 8GB)
+- **磁盘空间**: 约 1GB 可用空间
 
-### Installation
+### 安装方式
 
-#### Pre-built Releases (Recommended)
+1. **直接下载**：前往 [Releases](https://github.com/BluerAngala/MyClawX/releases) 页面下载对应系统的 `.exe` 或 `.dmg` 安装包。
+2. **一键安装**：运行安装程序，按照引导完成初始化即可。
 
-Download the latest release for your platform from the [Releases](https://github.com/ValueCell-ai/MyClawX/releases) page.
+---
 
-#### Build from Source
+## 开发者相关
+
+如果您希望基于本项目进行开发：
 
 ```bash
-# Clone the repository
-git clone https://github.com/ValueCell-ai/MyClawX.git
+# 克隆仓库
+git clone https://github.com/BluerAngala/MyClawX.git
 cd MyClawX
 
-# Initialize the project
+# 初始化环境
 pnpm run init
 
-# Start in development mode
+# 启动开发模式
 pnpm dev
 ```
 
-### First Launch
+---
 
-When you launch MyClawX for the first time, the **Setup Wizard** will guide you through:
+## 致谢
 
-1. **Language & Region** – Configure your preferred locale
-2. **AI Provider** – Enter your API keys for supported providers
-3. **Skill Bundles** – Select pre-configured skills for common use cases
-4. **Verification** – Test your configuration before entering the main interface
+MyClawX 离不开以下优秀开源项目的支持：
 
-### Proxy Settings
-
-MyClawX includes built-in proxy settings for environments where Electron, the OpenClaw Gateway, or channels such as Telegram need to reach the internet through a local proxy client.
-
-Open **Settings → Gateway → Proxy** and configure:
-
-- **Proxy Server**: the default proxy for all requests
-- **Bypass Rules**: hosts that should connect directly, separated by semicolons, commas, or new lines
-- In **Developer Mode**, you can optionally override:
-  - **HTTP Proxy**
-  - **HTTPS Proxy**
-  - **ALL_PROXY / SOCKS**
-
-Recommended local examples:
-
-```text
-Proxy Server: http://127.0.0.1:7890
-```
-
-Notes:
-
-- A bare `host:port` value is treated as HTTP.
-- If advanced proxy fields are left empty, MyClawX falls back to `Proxy Server`.
-- Saving proxy settings reapplies Electron networking immediately and restarts the Gateway automatically.
-- MyClawX also syncs the proxy to OpenClaw's Telegram channel config when Telegram is enabled.
+- [OpenClaw](https://github.com/OpenClaw) – 强大的 AI Agent 运行时
+- [Electron](https://www.electronjs.org/) – 跨平台桌面框架
+- [React](https://react.dev/) – UI 组件库
 
 ---
 
-## Architecture
+## 许可证
 
-MyClawX employs a **dual-process architecture** that separates UI concerns from AI runtime operations:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        MyClawX Desktop App                         │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │              Electron Main Process                          │  │
-│  │  • Window & application lifecycle management               │  │
-│  │  • Gateway process supervision                              │  │
-│  │  • System integration (tray, notifications, keychain)       │  │
-│  │  • Auto-update orchestration                                │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│                              │                                    │
-│                              │ IPC                                │
-│                              ▼                                    │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │              React Renderer Process                         │  │
-│  │  • Modern component-based UI (React 19)                     │  │
-│  │  • State management with Zustand                            │  │
-│  │  • Real-time WebSocket communication                        │  │
-│  │  • Rich Markdown rendering                                  │  │
-│  └────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               │ WebSocket (JSON-RPC)
-                               ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     OpenClaw Gateway                             │
-│                                                                  │
-│  • AI agent runtime and orchestration                           │
-│  • Message channel management                                    │
-│  • Skill/plugin execution environment                           │
-│  • Provider abstraction layer                                    │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Design Principles
-
-- **Process Isolation**: The AI runtime operates in a separate process, ensuring UI responsiveness even during heavy computation
-- **Graceful Recovery**: Built-in reconnection logic with exponential backoff handles transient failures automatically
-- **Secure Storage**: API keys and sensitive data leverage the operating system's native secure storage mechanisms
-- **Hot Reload**: Development mode supports instant UI updates without restarting the gateway
-
----
-
-## Use Cases
-
-### 🤖 Personal AI Assistant
-Configure a general-purpose AI agent that can answer questions, draft emails, summarize documents, and help with everyday tasks—all from a clean desktop interface.
-
-### 📊 Automated Monitoring
-Set up scheduled agents to monitor news feeds, track prices, or watch for specific events. Results are delivered to your preferred notification channel.
-
-### 💻 Developer Productivity
-Integrate AI into your development workflow. Use agents to review code, generate documentation, or automate repetitive coding tasks.
-
-### 🔄 Workflow Automation
-Chain multiple skills together to create sophisticated automation pipelines. Process data, transform content, and trigger actions—all orchestrated visually.
-
----
-
-## Development
-
-### Prerequisites
-
-- **Node.js**: 22+ (LTS recommended)
-- **Package Manager**: pnpm 9+ (recommended) or npm
-
-### Project Structure
-
-```
-MyClawX/
-├── electron/              # Electron Main Process
-│   ├── main/             # Application entry, window management
-│   ├── gateway/          # OpenClaw Gateway process manager
-│   ├── preload/          # Secure IPC bridge scripts
-│   └── utils/            # Utilities (storage, auth, paths)
-├── src/                   # React Renderer Process
-│   ├── components/       # Reusable UI components
-│   │   ├── ui/          # Base components (shadcn/ui)
-│   │   ├── layout/      # Layout components (sidebar, header)
-│   │   └── common/      # Shared components
-│   ├── pages/           # Application pages
-│   │   ├── Setup/       # Initial setup wizard
-│   │   ├── Dashboard/   # Home dashboard
-│   │   ├── Chat/        # AI chat interface
-│   │   ├── Channels/    # Channel management
-│   │   ├── Skills/      # Skill browser & manager
-│   │   ├── Cron/        # Scheduled tasks
-│   │   └── Settings/    # Configuration panels
-│   ├── stores/          # Zustand state stores
-│   ├── lib/             # Frontend utilities
-│   └── types/           # TypeScript type definitions
-├── resources/            # Static assets (icons, images)
-├── scripts/              # Build & utility scripts
-└── tests/               # Test suites
-```
-
-### Available Commands
-
-```bash
-# Development
-pnpm run init             # Install dependencies + download uv
-pnpm dev                  # Start with hot reload
-
-# Quality
-pnpm lint                 # Run ESLint
-pnpm typecheck            # TypeScript validation
-
-# Testing
-pnpm test                 # Run unit tests
-
-# Build & Package
-pnpm run build:vite       # Build frontend only
-pnpm build                # Full production build (with packaging assets)
-pnpm package              # Package for current platform
-pnpm package:mac          # Package for macOS
-pnpm package:win          # Package for Windows
-pnpm package:linux        # Package for Linux
-```
-
-### Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Runtime | Electron 40+ |
-| UI Framework | React 19 + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui |
-| State | Zustand |
-| Build | Vite + electron-builder |
-| Testing | Vitest + Playwright |
-| Animation | Framer Motion |
-| Icons | Lucide React |
-
----
-
-## Contributing
-
-We welcome contributions from the community! Whether it's bug fixes, new features, documentation improvements, or translations—every contribution helps make MyClawX better.
-
-### How to Contribute
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes with clear messages
-4. **Push** to your branch
-5. **Open** a Pull Request
-
-### Guidelines
-
-- Follow the existing code style (ESLint + Prettier)
-- Write tests for new functionality
-- Update documentation as needed
-- Keep commits atomic and descriptive
-
----
-
-## Acknowledgments
-
-MyClawX is built on the shoulders of excellent open-source projects:
-
-- [OpenClaw](https://github.com/OpenClaw) – The AI agent runtime
-- [Electron](https://www.electronjs.org/) – Cross-platform desktop framework
-- [React](https://react.dev/) – UI component library
-- [shadcn/ui](https://ui.shadcn.com/) – Beautifully designed components
-- [Zustand](https://github.com/pmndrs/zustand) – Lightweight state management
-
----
-
-## Community
-
-Join our community to connect with other users, get support, and share your experiences.
-
-| Enterprise WeChat | Feishu Group | Discord |
-| :---: | :---: | :---: |
-| <img src="src/assets/community/wecom-qr.png" width="150" alt="WeChat QR Code" /> | <img src="src/assets/community/feishu-qr.png" width="150" alt="Feishu QR Code" /> | <img src="src/assets/community/20260212-185822.png" width="150" alt="Discord QR Code" /> |
-
----
-
-## Star History
-
-<p align="center">
-  <img src="https://api.star-history.com/svg?repos=ValueCell-ai/MyClawX&type=Date" alt="Star History Chart" />
-</p>
-
----
-
-## License
-
-MyClawX is released under the [MIT License](LICENSE). You're free to use, modify, and distribute this software.
+本项目采用 [GPL v3.0](LICENSE) 协议开源。
+- **协议继承**：二次修改或分发必须遵循相同的协议。
+- **源码公开**：分发修改版本时必须公开源代码。
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ by the ValueCell Team</sub>
+  <sub>Built with ❤️ by BluerAngala</sub>
 </p>
