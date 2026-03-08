@@ -107,7 +107,7 @@ export function Chat() {
         </div>
 
         <h2 className="text-2xl font-bold mb-3">
-          {isStarting ? t('chat:gatewayStarting') : isError ? t('chat:gatewayError') : t('chat:gatewayNotRunning')}
+          {isStarting ? tCommon('gateway.starting') : isError ? tCommon('gateway.error') : tCommon('gateway.notRunning')}
         </h2>
 
         <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
@@ -143,7 +143,7 @@ export function Chat() {
 
         {isStarting && (
           <p className="mt-6 text-xs text-muted-foreground animate-pulse">
-            Starting up OpenClaw Gateway... this may take up to 30 seconds.
+            {tCommon('status.loading')}
           </p>
         )}
       </div>

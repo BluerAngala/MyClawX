@@ -8,7 +8,8 @@
         "professions": "職業シナリオ",
         "dashboard": "ダッシュボード",
         "settings": "設定",
-        "devConsole": "開発者コンソール"
+        "devConsole": "開発者コンソール",
+        "deleteSessionConfirm": "セッション \"{{label}}\" を削除しますか？"
     },
     "common": {
         "confirm": "確認",
@@ -51,11 +52,22 @@
         "configured": "設定済み",
         "loading": "読み込み中...",
         "saving": "保存中...",
-        "connecting": "接続中..."
+        "connecting": "接続中...",
+        "starting": "起動中...",
+        "reconnecting": "再接続中...",
+        "initializing": "初期化中..."
     },
     "gateway": {
+        "running": "ゲートウェイが実行中",
+        "starting": "起動中...",
+        "error": "ゲートウェイエラー",
+        "stopped": "ゲートウェイ停止",
         "notRunning": "ゲートウェイが停止中",
         "notRunningDesc": "この機能を使用するには OpenClaw ゲートウェイが実行されている必要があります。自動的に起動するか、設定から起動できます。",
-        "warning": "ゲートウェイが停止中です。"
+        "warning": "ゲートウェイが停止中です。",
+        "connected": "ゲートウェイに接続しました",
+        "initializing": "ゲートウェイを初期化中...",
+        "clickToStart": "クリックして起動を試行",
+        "forceRestart": "強制再起動"
     }
 }

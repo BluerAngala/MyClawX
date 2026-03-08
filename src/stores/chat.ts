@@ -148,6 +148,10 @@ function clearHistoryPoll(): void {
 const DEFAULT_CANONICAL_PREFIX = 'agent:main';
 const DEFAULT_SESSION_KEY = `${DEFAULT_CANONICAL_PREFIX}:main`;
 
+// Generate a unique session key for the initial app load to ensure
+// every app startup begins with a fresh, empty conversation.
+const INITIAL_SESSION_KEY = `${DEFAULT_CANONICAL_PREFIX}:session-${Date.now()}`;
+
 // ── Local image cache ─────────────────────────────────────────
 // The Gateway doesn't store image attachments in session content blocks,
 // so we cache them locally keyed by staged file path (which appears in the
@@ -917,7 +921,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   pendingToolImages: [],
 
   sessions: [],
-  currentSessionKey: DEFAULT_SESSION_KEY,
+  currentSessionKey: INITIAL_SESSION_KEY,
   sessionLabels: {},
   sessionLastActivity: {},
 

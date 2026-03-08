@@ -2,6 +2,7 @@
  * Status Badge Component
  * Displays connection/state status with color coding
  */
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,20 +14,21 @@ interface StatusBadgeProps {
   showDot?: boolean;
 }
 
-const statusConfig: Record<Status, { label: string; variant: 'success' | 'secondary' | 'warning' | 'destructive' }> = {
-  connected: { label: 'Connected', variant: 'success' },
-  running: { label: 'Running', variant: 'success' },
-  disconnected: { label: 'Disconnected', variant: 'secondary' },
-  stopped: { label: 'Stopped', variant: 'secondary' },
-  connecting: { label: 'Connecting', variant: 'warning' },
-  starting: { label: 'Starting', variant: 'warning' },
-  reconnecting: { label: 'Reconnecting', variant: 'warning' },
-  error: { label: 'Error', variant: 'destructive' },
+const statusConfig: Record<Status, { variant: 'success' | 'secondary' | 'warning' | 'destructive' }> = {
+  connected: { variant: 'success' },
+  running: { variant: 'success' },
+  disconnected: { variant: 'secondary' },
+  stopped: { variant: 'secondary' },
+  connecting: { variant: 'warning' },
+  starting: { variant: 'warning' },
+  reconnecting: { variant: 'warning' },
+  error: { variant: 'destructive' },
 };
 
 export function StatusBadge({ status, label, showDot = true }: StatusBadgeProps) {
+  const { t } = useTranslation();
   const config = statusConfig[status];
-  const displayLabel = label || config.label;
+  const displayLabel = label || t(`status.${status}`);
   
   return (
     <Badge variant={config.variant} className="gap-1.5">

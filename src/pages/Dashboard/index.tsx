@@ -45,7 +45,7 @@ type UsageWindow = '7d' | '30d' | 'all';
 type UsageGroupBy = 'model' | 'day';
 
 export function Dashboard() {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation(['dashboard', 'common']);
   const gatewayStatus = useGatewayStore((state) => state.status);
   const { channels, fetchChannels } = useChannelsStore();
   const { skills, fetchSkills } = useSkillsStore();
@@ -183,7 +183,7 @@ export function Dashboard() {
               {uptime > 0 ? formatUptime(uptime) : '—'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {gatewayStatus.state === 'running' ? t('sinceRestart') : t('gatewayNotRunning')}
+              {gatewayStatus.state === 'running' ? t('sinceRestart') : t('common:gateway.notRunning')}
             </p>
           </CardContent>
         </Card>

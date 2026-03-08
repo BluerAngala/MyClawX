@@ -8,7 +8,8 @@
         "professions": "Professions",
         "dashboard": "Dashboard",
         "settings": "Settings",
-        "devConsole": "Developer Console"
+        "devConsole": "Developer Console",
+        "deleteSessionConfirm": "Delete session \"{{label}}\"?"
     },
     "common": {
         "confirm": "Confirm",
@@ -51,11 +52,22 @@
         "configured": "Configured",
         "loading": "Loading...",
         "saving": "Saving...",
-        "connecting": "Connecting..."
+        "connecting": "Connecting...",
+        "starting": "Starting...",
+        "reconnecting": "Reconnecting...",
+        "initializing": "Initializing..."
     },
     "gateway": {
+        "running": "Gateway Running",
+        "starting": "Starting...",
+        "error": "Gateway Error",
+        "stopped": "Gateway Stopped",
         "notRunning": "Gateway Not Running",
         "notRunningDesc": "The OpenClaw Gateway needs to be running to use this feature. It will start automatically, or you can start it from Settings.",
-        "warning": "Gateway is not running."
+        "warning": "Gateway is not running.",
+        "connected": "Gateway is connected",
+        "initializing": "Gateway is initializing...",
+        "clickToStart": "Click to attempt startup",
+        "forceRestart": "Force Restart"
     }
 }

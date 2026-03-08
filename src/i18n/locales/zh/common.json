@@ -8,7 +8,8 @@
         "professions": "职业场景",
         "dashboard": "仪表盘",
         "settings": "设置",
-        "devConsole": "开发者控制台"
+        "devConsole": "开发者控制台",
+        "deleteSessionConfirm": "确认删除会话 \"{{label}}\"？"
     },
     "common": {
         "confirm": "确认",
@@ -51,11 +52,22 @@
         "configured": "已配置",
         "loading": "加载中...",
         "saving": "保存中...",
-        "connecting": "连接中..."
+        "connecting": "连接中...",
+        "starting": "启动中...",
+        "reconnecting": "重新连接中...",
+        "initializing": "正在初始化..."
     },
     "gateway": {
+        "running": "网关运行中",
+        "starting": "网关启动中...",
+        "error": "网关错误",
+        "stopped": "网关已停止",
         "notRunning": "网关未运行",
         "notRunningDesc": "OpenClaw 网关需要运行才能使用此功能。它将自动启动，或者您可以从设置中启动。",
-        "warning": "网关未运行。"
+        "warning": "网关未运行。",
+        "connected": "网关已连接",
+        "initializing": "网关正在初始化...",
+        "clickToStart": "点击尝试启动",
+        "forceRestart": "强制重启"
     }
 }

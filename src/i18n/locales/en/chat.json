@@ -1,7 +1,4 @@
 {
-    "gatewayNotRunning": "Gateway Not Running",
-    "gatewayStarting": "Gateway Starting...",
-    "gatewayError": "Gateway Error",
     "gatewayRequired": "The OpenClaw Gateway needs to be running to use chat. It will start automatically, or you can start it from Settings.",
     "inputPlaceholder": "Type a message (Enter to send, Shift+Enter for new line)",
     "inputPlaceholderDisabled": "Gateway not connected...",
@@ -14,6 +11,7 @@
         "creativeTasksDesc": "Writing, brainstorming, ideas"
     },
     "noLogs": "(No logs available yet)",
+    "newSession": "New Session",
     "toolbar": {
         "refresh": "Refresh chat",
         "showThinking": "Show thinking",

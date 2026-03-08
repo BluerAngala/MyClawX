@@ -8,7 +8,6 @@
     "connectedOf": "{{total}} 中 {{connected}} 接続済み",
     "enabledOf": "{{total}} 中 {{enabled}} 有効",
     "sinceRestart": "前回の再起動から",
-    "gatewayNotRunning": "ゲートウェイが停止中",
     "quickActions": {
         "title": "クイックアクション",
         "description": "よく使うタスクとショートカット",

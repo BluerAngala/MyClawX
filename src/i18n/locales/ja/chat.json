@@ -1,7 +1,4 @@
 {
-    "gatewayNotRunning": "ゲートウェイが停止中",
-    "gatewayStarting": "ゲートウェイを起動中...",
-    "gatewayError": "ゲートウェイ起動エラー",
     "gatewayRequired": "チャットを使用するには OpenClaw ゲートウェイが実行されている必要があります。自動的に起動するか、設定から起動できます。",
     "inputPlaceholder": "メッセージを入力（Enter で送信、Shift+Enter で改行）",
     "inputPlaceholderDisabled": "ゲートウェイに接続されていません...",
@@ -14,6 +11,7 @@
         "creativeTasksDesc": "ライティング、ブレスト、アイデア"
     },
     "noLogs": "（ログはまだありません）",
+    "newSession": "新しいセッション",
     "toolbar": {
         "refresh": "チャットを更新",
         "showThinking": "思考を表示",

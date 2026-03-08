@@ -99,8 +99,6 @@ export function Sidebar() {
   const mainSessions = sessions.filter((s) => s.key.endsWith(':main'));
   const otherSessions = sessions.filter((s) => !s.key.endsWith(':main'));
 
-  const getSessionLabel = (key: string, displayName?: string, label?: string) =>
-    sessionLabels[key] ?? label ?? displayName ?? key;
 
   const openDevConsole = async () => {
     try {
@@ -119,8 +117,15 @@ export function Sidebar() {
     }
   };
 
-  const { t } = useTranslation();
+  const { t } = useTranslation(['common', 'chat']);
   const [sessionToDelete, setSessionToDelete] = useState<{ key: string; label: string } | null>(null);
+
+  const getSessionLabel = (key: string, displayName?: string, label?: string) => {
+    if (sessionLabels[key]) return sessionLabels[key];
+    if (label) return label;
+    if (key.includes(':session-')) return t('chat:newSession');
+    return displayName ?? key;
+  };
 
 const navItems = [
     { to: '/dashboard', icon: <Home className="h-5 w-5" />, label: t('sidebar.dashboard') },
@@ -257,12 +262,12 @@ const navItems = [
                   <div className="flex flex-1 items-center justify-between overflow-hidden">
                     <span className="truncate text-muted-foreground">
                       {gatewayStatus.state === 'running'
-                        ? t('gateway.running', 'Gateway Running')
+                        ? t('gateway.running')
                         : gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting'
-                        ? t('gateway.starting', 'Starting...')
+                        ? t('gateway.starting')
                         : gatewayStatus.state === 'error'
-                        ? t('gateway.error', 'Gateway Error')
-                        : t('gateway.stopped', 'Gateway Stopped')}
+                        ? t('gateway.error')
+                        : t('gateway.stopped')}
                     </span>
                     {gatewayStatus.state !== 'running' && (
                       <Zap className="h-3 w-3 text-primary animate-pulse shrink-0 ml-1" />
@@ -275,16 +280,16 @@ const navItems = [
               <div className="text-xs space-y-1">
                 <p className="font-bold">
                   {gatewayStatus.state === 'running'
-                    ? 'Gateway is connected'
+                    ? t('gateway.connected')
                     : gatewayStatus.state === 'starting' || gatewayStatus.state === 'reconnecting'
-                    ? 'Gateway is initializing...'
-                    : 'Gateway is not running'}
+                    ? t('gateway.initializing')
+                    : t('gateway.notRunning')}
                 </p>
                 {gatewayStatus.state === 'running' && (
                   <p className="text-muted-foreground">Port: {gatewayStatus.port}</p>
                 )}
                 {(gatewayStatus.state === 'error' || gatewayStatus.state === 'stopped') && (
-                  <p className="text-primary font-medium">Click to attempt startup</p>
+                  <p className="text-primary font-medium">{t('gateway.clickToStart')}</p>
                 )}
                 {gatewayStatus.state === 'running' && (
                   <button
@@ -294,7 +299,7 @@ const navItems = [
                     }}
                     className="text-[10px] text-destructive hover:underline block mt-1"
                   >
-                    Force Restart
+                    {t('gateway.forceRestart')}
                   </button>
                 )}
               </div>
@@ -331,10 +336,10 @@ const navItems = [
 
       <ConfirmDialog
         open={!!sessionToDelete}
-        title={t('common.confirm', 'Confirm')}
-        message={sessionToDelete ? t('sidebar.deleteSessionConfirm', `Delete "${sessionToDelete.label}"?`) : ''}
-        confirmLabel={t('common.delete', 'Delete')}
-        cancelLabel={t('common.cancel', 'Cancel')}
+        title={t('common.confirm')}
+        message={sessionToDelete ? t('sidebar.deleteSessionConfirm', { label: sessionToDelete.label }) : ''}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         variant="destructive"
         onConfirm={async () => {
           if (!sessionToDelete) return;
