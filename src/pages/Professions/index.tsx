@@ -81,7 +81,7 @@ export default function ProfessionsPage({
     if (result.success) {
       toast.success(`已启用场景：${scene.nameZh}`);
       newSession();
-      navigate('/chat');
+      navigate('/');
     }
   };
 
