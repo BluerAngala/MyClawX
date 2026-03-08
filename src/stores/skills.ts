@@ -5,8 +5,12 @@
 import { create } from 'zustand';
 import type { Skill, MarketplaceSkill } from '../types/skill';
 
-// Skills that are blocked or unavailable in China mainland
+// Skills that are blocked or unavailable in China mainland, or require API keys
 // These will be disabled by default on first load
+// Categories:
+// 1. Services blocked in China (Google, Discord, Slack, etc.)
+// 2. Skills requiring API keys (OpenAI, Gemini, etc.)
+// 3. Skills requiring complex local setup (TTS models, etc.)
 const CHINA_BLOCKED_SKILLS = [
   '1password',
   'apple-notes',
@@ -17,6 +21,7 @@ const CHINA_BLOCKED_SKILLS = [
   'bluebubbles',
   'brave-search',
   'camsnap',
+  'coding-agent',
   'discord',
   'gemini',
   'gh-issues',
@@ -32,6 +37,7 @@ const CHINA_BLOCKED_SKILLS = [
   'home-assistant',
   'imsg',
   'jira',
+  'nano-banana-pro',
   'notion',
   'obsidian',
   'openai',
@@ -40,11 +46,13 @@ const CHINA_BLOCKED_SKILLS = [
   'openhue',
   'oracle',
   'peekaboo',
+  'sherpa-onnx-tts',
   'slack',
   'songsee',
   'sonoscli',
   'spotify-player',
   'stripe',
+  'summarize',
   'tavily',
   'things-mac',
   'trello',
