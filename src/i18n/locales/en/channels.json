@@ -9,6 +9,16 @@
         "disconnected": "Disconnected"
     },
     "gatewayWarning": "Gateway service is not running. Integrations cannot connect.",
+    "configured": "Configured",
+    "configuredDesc": "Manage your configured integrations",
+    "configuredBadge": "Configured",
+    "deleteConfirm": "Are you sure you want to delete this integration?",
+    "common": {
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
     "available": "Available Integrations",
     "availableDesc": "Connect a new integration",
     "showAll": "Show All",

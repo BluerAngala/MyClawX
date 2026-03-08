@@ -9,6 +9,16 @@
         "disconnected": "未接続"
     },
     "gatewayWarning": "ゲートウェイサービスが実行されていないため、連携に接続できません。",
+    "configured": "設定済み",
+    "configuredDesc": "設定済みの連携を管理",
+    "configuredBadge": "設定済み",
+    "deleteConfirm": "この連携を削除してもよろしいですか？",
+    "common": {
+        "confirm": "確認",
+        "delete": "削除",
+        "cancel": "キャンセル",
+        "saving": "保存中..."
+    },
     "available": "利用可能な連携",
     "availableDesc": "新しい連携を接続",
     "showAll": "すべて表示",

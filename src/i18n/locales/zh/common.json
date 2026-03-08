@@ -10,6 +10,12 @@
         "settings": "设置",
         "devConsole": "开发者控制台"
     },
+    "common": {
+        "confirm": "确认",
+        "delete": "删除",
+        "cancel": "取消",
+        "saving": "保存中..."
+    },
     "actions": {
         "save": "保存",
         "cancel": "取消",

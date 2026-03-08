@@ -9,6 +9,16 @@
         "disconnected": "未连接"
     },
     "gatewayWarning": "网关服务未运行，渠道无法连接。",
+    "configured": "已配置",
+    "configuredDesc": "管理您已配置的渠道",
+    "configuredBadge": "已配置",
+    "deleteConfirm": "您确定要删除此渠道吗？",
+    "common": {
+        "confirm": "确认",
+        "delete": "删除",
+        "cancel": "取消",
+        "saving": "保存中..."
+    },
     "available": "可用渠道",
     "availableDesc": "连接一个新的渠道",
     "showAll": "显示全部",

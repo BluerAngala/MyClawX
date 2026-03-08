@@ -1,6 +1,11 @@
 {
     "title": "定期タスク",
     "subtitle": "定期タスクでAIワークフローを自動化",
+    "common": {
+        "confirm": "確認",
+        "delete": "削除",
+        "cancel": "キャンセル"
+    },
     "newTask": "新規タスク",
     "refresh": "更新",
     "gatewayWarning": "ゲートウェイが稼働していません。アクティブなゲートウェイがないと定期タスクを管理できません。",

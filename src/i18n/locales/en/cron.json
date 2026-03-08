@@ -1,6 +1,11 @@
 {
     "title": "Scheduled Tasks",
     "subtitle": "Automate AI workflows with scheduled tasks",
+    "common": {
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "cancel": "Cancel"
+    },
     "newTask": "New Task",
     "refresh": "Refresh",
     "gatewayWarning": "Gateway is not running. Scheduled tasks cannot be managed without an active Gateway.",

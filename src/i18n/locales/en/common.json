@@ -10,6 +10,12 @@
         "settings": "Settings",
         "devConsole": "Developer Console"
     },
+    "common": {
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "saving": "Saving..."
+    },
     "actions": {
         "save": "Save",
         "cancel": "Cancel",
