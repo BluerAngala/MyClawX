@@ -20,6 +20,7 @@ export interface Skill {
   isCore?: boolean;
   isBundled?: boolean;
   dependencies?: string[];
+  isBlockedInChina?: boolean;
 }
 
 /**

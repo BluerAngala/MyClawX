@@ -63,6 +63,8 @@ function SkillDetailDialog({ skill, onClose, onToggle }: SkillDetailDialogProps)
   const [isEnvExpanded, setIsEnvExpanded] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const skillName = t(`skillNames.${skill.id}`, { defaultValue: skill.name });
+
   // Initialize config from skill
   useEffect(() => {
     // API Key
@@ -168,7 +170,7 @@ function SkillDetailDialog({ skill, onClose, onToggle }: SkillDetailDialogProps)
             <span className="text-4xl">{skill.icon || '🔧'}</span>
             <div>
               <CardTitle className="flex items-center gap-2">
-                {skill.name}
+                {skillName}
                 {skill.isCore && <Lock className="h-4 w-4 text-muted-foreground" />}
               </CardTitle>
               <div className="flex gap-2 mt-2">
@@ -382,6 +384,9 @@ function MarketplaceSkillCard({
   onInstall,
   onUninstall
 }: MarketplaceSkillCardProps) {
+  const { t } = useTranslation('skills');
+  const skillName = t(`skillNames.${skill.slug}`, { defaultValue: skill.name });
+
   const handleCardClick = () => {
     window.electron.ipcRenderer.invoke('shell:openExternal', `https://clawhub.ai/s/${skill.slug}`);
   };
@@ -398,7 +403,7 @@ function MarketplaceSkillCard({
               📦
             </div>
             <div>
-              <CardTitle className="text-base group-hover:text-primary transition-colors">{skill.name}</CardTitle>
+              <CardTitle className="text-base group-hover:text-primary transition-colors">{skillName}</CardTitle>
               <CardDescription className="text-xs flex items-center gap-2">
                 <span>v{skill.version}</span>
                 {skill.author && (
@@ -884,7 +889,8 @@ export function Skills() {
                   key={skill.id}
                   className={cn(
                     'cursor-pointer hover:border-primary/50 transition-colors',
-                    skill.enabled && 'border-primary/50 bg-primary/5'
+                    skill.enabled && !skill.isBlockedInChina && 'border-primary/50 bg-primary/5',
+                    skill.isBlockedInChina && 'opacity-70'
                   )}
                   onClick={() => setSelectedSkill(skill)}
                 >
@@ -894,8 +900,12 @@ export function Skills() {
                         <span className="text-2xl">{skill.icon || '🧩'}</span>
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
-                            {skill.name}
-                            {skill.isCore ? (
+                            {t(`skillNames.${skill.id}`, { defaultValue: skill.name })}
+                            {skill.isBlockedInChina ? (
+                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">
+                                {t('detail.blocked')}
+                              </Badge>
+                            ) : skill.isCore ? (
                               <Lock className="h-3 w-3 text-muted-foreground" />
                             ) : skill.isBundled ? (
                               <Puzzle className="h-3 w-3 text-blue-500/70" />
@@ -927,7 +937,7 @@ export function Skills() {
                           onCheckedChange={(checked) => {
                             handleToggle(skill.id, checked);
                           }}
-                          disabled={skill.isCore}
+                          disabled={skill.isCore || skill.isBlockedInChina}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
@@ -935,7 +945,7 @@ export function Skills() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground line-clamp-2">
-                      {skill.description}
+                      {skill.isBlockedInChina ? t('detail.blockedDesc') : skill.description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       {skill.version && (

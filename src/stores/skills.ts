@@ -5,6 +5,54 @@
 import { create } from 'zustand';
 import type { Skill, MarketplaceSkill } from '../types/skill';
 
+// Skills that are blocked or unavailable in China mainland
+// These will be disabled by default on first load
+const CHINA_BLOCKED_SKILLS = [
+  '1password',
+  'apple-notes',
+  'apple-reminders',
+  'bear-notes',
+  'blogwatcher',
+  'blucli',
+  'bluebubbles',
+  'brave-search',
+  'camsnap',
+  'discord',
+  'gemini',
+  'gh-issues',
+  'gifgrep',
+  'github',
+  'gog',
+  'goplaces',
+  'google-calendar',
+  'google-drive',
+  'google-maps',
+  'google-search',
+  'himalaya',
+  'home-assistant',
+  'imsg',
+  'jira',
+  'notion',
+  'obsidian',
+  'openai',
+  'openai-image-gen',
+  'openai-whisper-api',
+  'openhue',
+  'oracle',
+  'peekaboo',
+  'slack',
+  'songsee',
+  'sonoscli',
+  'spotify-player',
+  'stripe',
+  'tavily',
+  'things-mac',
+  'trello',
+  'voice-call',
+  'wacli',
+  'youtube',
+];
+
 type GatewaySkillStatus = {
   skillKey: string;
   slug?: string;
@@ -42,6 +90,7 @@ interface SkillsState {
   searchError: string | null;
   installing: Record<string, boolean>; // slug -> boolean
   error: string | null;
+  chinaBlockedSkillsInitialized: boolean;
 
   // Actions
   fetchSkills: () => Promise<void>;
@@ -64,6 +113,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
   searchError: null,
   installing: {},
   error: null,
+  chinaBlockedSkillsInitialized: false,
 
   fetchSkills: async () => {
     // Only show loading state if we have no skills yet (initial load)
@@ -95,6 +145,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
         combinedSkills = gatewayResult.result.skills.map((s: GatewaySkillStatus) => {
           // Merge with direct config if available
           const directConfig = configResult[s.skillKey] || {};
+          const isBlockedInChina = CHINA_BLOCKED_SKILLS.includes(s.skillKey);
 
           return {
             id: s.skillKey,
@@ -111,6 +162,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
             },
             isCore: s.bundled && s.always,
             isBundled: s.bundled,
+            isBlockedInChina,
           };
         });
       } else if (currentSkills.length > 0) {
@@ -124,6 +176,7 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
           const existing = combinedSkills.find(s => s.id === cs.slug);
           if (!existing) {
             const directConfig = configResult[cs.slug] || {};
+            const isBlockedInChina = CHINA_BLOCKED_SKILLS.includes(cs.slug);
             combinedSkills.push({
               id: cs.slug,
               slug: cs.slug,
@@ -136,12 +189,39 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
               config: directConfig,
               isCore: false,
               isBundled: false,
+              isBlockedInChina,
             });
           }
         });
       }
 
-      set({ skills: combinedSkills, loading: false });
+      // Disable China-blocked skills on first load
+      const { chinaBlockedSkillsInitialized } = get();
+      if (!chinaBlockedSkillsInitialized) {
+        let hasChanges = false;
+        combinedSkills = combinedSkills.map((skill) => {
+          if (CHINA_BLOCKED_SKILLS.includes(skill.id) && skill.enabled && !skill.isCore) {
+            hasChanges = true;
+            // Also disable via Gateway RPC
+            window.electron.ipcRenderer.invoke(
+              'gateway:rpc',
+              'skills.update',
+              { skillKey: skill.id, enabled: false }
+            ).catch((err: unknown) => {
+              console.warn(`Failed to disable skill ${skill.id}:`, err);
+            });
+            return { ...skill, enabled: false };
+          }
+          return skill;
+        });
+        if (hasChanges) {
+          set({ skills: combinedSkills, loading: false, chinaBlockedSkillsInitialized: true });
+        } else {
+          set({ skills: combinedSkills, loading: false, chinaBlockedSkillsInitialized: true });
+        }
+      } else {
+        set({ skills: combinedSkills, loading: false });
+      }
     } catch (error) {
       console.error('Failed to fetch skills:', error);
       let errorMsg = error instanceof Error ? error.message : String(error);
@@ -259,7 +339,12 @@ export const useSkillsStore = create<SkillsState>((set, get) => ({
   },
 
   enableSkill: async (skillId) => {
-    const { updateSkill } = get();
+    const { updateSkill, skills } = get();
+
+    const skill = skills.find((s) => s.id === skillId);
+    if (skill?.isBlockedInChina) {
+      throw new Error('This skill is blocked in China mainland due to network restrictions');
+    }
 
     try {
       const result = await window.electron.ipcRenderer.invoke(
