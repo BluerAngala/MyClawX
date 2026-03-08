@@ -104,7 +104,7 @@
     },
     "tabs": {
         "installed": "已安装",
-        "marketplace": "市场"
+        "marketplace": "技能市场"
     },
     "filter": {
         "all": "全部 ({{count}})",
@@ -167,7 +167,7 @@
         "fetchRateLimitError": "获取技能列表请求过于频繁，请稍后再试。"
     },
     "marketplace": {
-        "title": "市场",
+        "title": "技能市场",
         "zipInstallTitle": "从 ZIP 安装",
         "zipInstallDesc": "下载技能 ZIP 包后直接在此处导入，无需手动解压。",
         "urlInstallTitle": "通过 URL 安装",
@@ -180,5 +180,43 @@
         "searchError": "ClawHub 搜索失败。请检查您的连接或安装。",
         "rateLimitMirrorHint": "官方源请求过于频繁。建议切换到国内镜像源以获得更稳定的体验。",
         "switchToMirror": "立即切换到国内镜像"
+    },
+    "coze": {
+        "title": "Coze 技能",
+        "subtitle": "将 Coze 智能体和工作流作为技能使用",
+        "infoTitle": "什么是 Coze 技能？",
+        "infoDesc": "Coze 是字节跳动推出的 AI 智能体开发平台。您可以将创建的 Bot 或工作流接入 MyClawX，作为技能在对话中调用。",
+        "mySkills": "我的 Coze 技能",
+        "addSkill": "添加技能",
+        "editSkill": "编辑技能",
+        "noSkills": "暂无 Coze 技能",
+        "noSkillsDesc": "点击上方按钮添加您的第一个 Coze 智能体或工作流",
+        "noDescription": "暂无描述",
+        "name": "名称",
+        "namePlaceholder": "例如：翻译助手",
+        "nameRequired": "请输入技能名称",
+        "description": "描述",
+        "descriptionPlaceholder": "描述这个技能的功能...",
+        "icon": "图标",
+        "type": "类型",
+        "bot": "智能体",
+        "workflow": "工作流",
+        "botId": "Bot ID",
+        "botIdRequired": "请输入 Bot ID",
+        "workflowId": "工作流 ID",
+        "workflowIdRequired": "请输入工作流 ID",
+        "apiToken": "API Token",
+        "tokenRequired": "请输入 API Token",
+        "apiUrl": "API 地址",
+        "parameters": "输入参数",
+        "paramCount": "{{count}} 个参数",
+        "paramKey": "参数键名",
+        "paramLabel": "显示名称",
+        "addParameter": "添加参数",
+        "save": "保存",
+        "cancel": "取消",
+        "skillAdded": "Coze 技能已添加",
+        "skillUpdated": "Coze 技能已更新",
+        "skillDeleted": "Coze 技能已删除"
     }
 }

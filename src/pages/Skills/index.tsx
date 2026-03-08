@@ -28,6 +28,7 @@ import {
   FolderOpen,
   Link,
   FileArchive,
+  Bot,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +44,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Skill, MarketplaceSkill } from '@/types/skill';
 import { useTranslation } from 'react-i18next';
+import { CozeSkillsManager } from './CozeSkillsManager';
 
 
 
@@ -803,20 +805,26 @@ export function Skills() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="all" className="gap-2">
-            <Puzzle className="h-4 w-4" />
-            {t('tabs.installed')}
-          </TabsTrigger>
-          <TabsTrigger value="marketplace" className="gap-2">
-            <Globe className="h-4 w-4" />
-            {t('tabs.marketplace')}
-          </TabsTrigger>
-          {/* <TabsTrigger value="bundles" className="gap-2">
-            <Package className="h-4 w-4" />
-            Bundles
-          </TabsTrigger> */}
-        </TabsList>
+        <div className="flex justify-center">
+          <TabsList>
+            <TabsTrigger value="all" className="gap-2">
+              <Puzzle className="h-4 w-4" />
+              {t('tabs.installed')}
+            </TabsTrigger>
+            <TabsTrigger value="coze" className="gap-2">
+              <Bot className="h-4 w-4" />
+              Coze
+            </TabsTrigger>
+            <TabsTrigger value="marketplace" className="gap-2">
+              <Globe className="h-4 w-4" />
+              {t('tabs.marketplace')}
+            </TabsTrigger>
+            {/* <TabsTrigger value="bundles" className="gap-2">
+              <Package className="h-4 w-4" />
+              Bundles
+            </TabsTrigger> */}
+          </TabsList>
+        </div>
 
         <TabsContent value="all" className="space-y-6 mt-6">
           {/* Search and Filter */}
@@ -968,6 +976,10 @@ export function Skills() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="coze" className="space-y-6 mt-6">
+          <CozeSkillsManager />
         </TabsContent>
 
         <TabsContent value="marketplace" className="space-y-6 mt-6">
