@@ -5,12 +5,12 @@
  *
  * All file I/O uses async fs/promises to avoid blocking the main thread.
  */
-import { readFile, writeFile, access, cp, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
+import { readFile, writeFile, access, cp, mkdir, readdir } from 'fs/promises';
+import { existsSync, statSync } from 'fs';
 import { constants } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { getOpenClawDir } from './paths';
+import { getOpenClawDir, getResourcesDir } from './paths';
 import { logger } from './logger';
 
 const OPENCLAW_CONFIG_PATH = join(homedir(), '.openclaw', 'openclaw.json');
@@ -162,7 +162,7 @@ export async function ensureBuiltinSkillsInstalled(): Promise<void> {
         const targetManifest = join(targetDir, 'SKILL.md');
 
         if (existsSync(targetManifest)) {
-            continue; // already installed
+            continue;
         }
 
         const openclawDir = getOpenClawDir();
@@ -180,5 +180,71 @@ export async function ensureBuiltinSkillsInstalled(): Promise<void> {
         } catch (error) {
             logger.warn(`Failed to install built-in skill ${slug}:`, error);
         }
+    }
+
+    await ensureCustomSkillsInstalled();
+}
+
+/**
+ * Ensure custom skills from resources/skills/ are deployed to ~/.openclaw/skills/<slug>/.
+ * These are MyClawX-specific skills bundled with the application.
+ * Unlike built-in skills, these will update if the source is newer.
+ */
+async function ensureCustomSkillsInstalled(): Promise<void> {
+    const skillsRoot = join(homedir(), '.openclaw', 'skills');
+    const customSkillsDir = join(getResourcesDir(), 'skills');
+
+    if (!existsSync(customSkillsDir)) {
+        return;
+    }
+
+    try {
+        const entries = await readdir(customSkillsDir, { withFileTypes: true });
+
+        for (const entry of entries) {
+            if (!entry.isDirectory()) {
+                continue;
+            }
+
+            const slug = entry.name;
+            const sourceDir = join(customSkillsDir, slug);
+            const sourceManifest = join(sourceDir, 'SKILL.md');
+
+            if (!existsSync(sourceManifest)) {
+                continue;
+            }
+
+            const targetDir = join(skillsRoot, slug);
+            const targetManifest = join(targetDir, 'SKILL.md');
+
+            const shouldInstall = !existsSync(targetManifest) || isSourceNewer(sourceManifest, targetManifest);
+
+            if (!shouldInstall) {
+                continue;
+            }
+
+            try {
+                await mkdir(targetDir, { recursive: true });
+                await cp(sourceDir, targetDir, { recursive: true });
+                logger.info(`Installed custom skill: ${slug} -> ${targetDir}`);
+            } catch (error) {
+                logger.warn(`Failed to install custom skill ${slug}:`, error);
+            }
+        }
+    } catch (error) {
+        logger.warn('Failed to scan custom skills directory:', error);
+    }
+}
+
+/**
+ * Check if source file is newer than target file
+ */
+function isSourceNewer(sourcePath: string, targetPath: string): boolean {
+    try {
+        const sourceStat = statSync(sourcePath);
+        const targetStat = statSync(targetPath);
+        return sourceStat.mtimeMs > targetStat.mtimeMs;
+    } catch {
+        return true;
     }
 }

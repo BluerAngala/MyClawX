@@ -12,6 +12,57 @@
 
 ## 二、现有技能分析
 
+### 2.0 文件上传功能（已实现）
+
+MyClawX 已完整实现文件上传功能，支持用户在对话中上传合同、文书等文件：
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| 原生文件选择器 | ✅ 已实现 | 点击附件按钮选择文件 |
+| 剪贴板粘贴 | ✅ 已实现 | Ctrl+V 粘贴图片 |
+| 拖放上传 | ✅ 已实现 | 拖拽文件到输入框 |
+| 图片预览 | ✅ 已实现 | 图片文件显示缩略图 |
+| 文件卡片 | ✅ 已实现 | 非图片文件显示文件卡片 |
+
+**文件处理流程**：
+
+```
+用户上传文件（PDF/DOCX/图片等）
+    ↓
+文件暂存到磁盘（临时目录）
+    ↓
+消息发送时：
+  ├─ 图片文件 → base64 编码，AI 可直接"看到"
+  └─ 其他文件 → 路径引用格式
+    ↓
+消息格式示例：
+  "请帮我审查这份合同
+   [media attached: C:/path/to/contract.pdf (application/pdf) | C:/path/to/contract.pdf]"
+    ↓
+AI 从消息中提取文件路径
+    ↓
+调用 doc-reader 技能读取文件内容
+```
+
+**技能如何访问上传的文件**：
+
+技能脚本从命令行参数或标准输入接收文件路径，然后读取文件内容：
+
+```python
+# 示例：doc-reader 技能读取用户上传的 PDF
+import sys
+import pdfplumber
+
+def read_pdf(file_path):
+    with pdfplumber.open(file_path) as pdf:
+        return [page.extract_text() for page in pdf.pages]
+
+if __name__ == "__main__":
+    file_path = sys.argv[1]  # 从消息中提取的文件路径
+    content = read_pdf(file_path)
+    print(content)
+```
+
 ### 2.1 当前可用技能
 
 | 技能名称 | 功能 | 适用场景 |
@@ -226,49 +277,95 @@ law-search/
 
 #### 4.2.1 contract-review（合同审查技能）
 
-**目标**：提供合同审查流程指导、风险检查清单、审查报告生成
+**目标**：通过浏览器自动化调用智析合同（zhiexa.com）进行专业合同审查
 
-**实现方式**：纯文档型 + 脚本辅助
+**实现方式**：浏览器自动化（使用 OpenClaw 内置 Browser 工具）
+
+**为什么选择浏览器自动化**：
+1. **专业服务** - 智析合同是专业的 AI 合同审查平台，审查结果更专业
+2. **无需开发** - 直接使用现有平台，无需自己实现复杂的审查逻辑
+3. **修订文档** - 平台直接输出带修订标记的 Word 文档，符合法律行业习惯
+4. **简单可靠** - 利用 OpenClaw 内置的浏览器控制功能，实现简单
+
+**工作流程**：
+
+```
+用户操作：上传合同文件 + 输入"请帮我审查这份合同"
+    ↓
+消息内容：
+  "请帮我审查这份合同
+   [media attached: C:/path/to/contract.pdf (application/pdf) | ...]"
+    ↓
+AI 解析消息，识别：
+  1. 用户意图：合同审查
+  2. 文件路径：C:/path/to/contract.pdf
+    ↓
+AI 调用浏览器自动化流程：
+  1. 打开浏览器，访问 https://www.zhiexa.com/contract
+  2. 检查登录状态：
+     - 如果未登录 → 提示用户"请先在浏览器中登录智析合同"
+     - 如果已登录 → 继续
+  3. 上传合同文件（使用 browser upload 命令）
+  4. 点击"开始审查"按钮
+  5. 等待审查完成
+  6. 下载审查报告（带修订标记的 Word 文档）
+    ↓
+输出：审查报告文档（DOCX，带 Track Changes）
+```
+
+**OpenClaw 浏览器控制命令**：
+
+```bash
+# 1. 启动浏览器（如果未启动）
+openclaw browser start
+
+# 2. 打开智析合同页面
+openclaw browser open https://www.zhiexa.com/contract
+
+# 3. 获取页面快照，检查登录状态
+openclaw browser snapshot --interactive
+
+# 4. 上传文件（先准备上传，再点击上传按钮）
+openclaw browser upload /path/to/contract.pdf
+
+# 5. 点击"开始审查"按钮
+openclaw browser click <ref>  # ref 从 snapshot 获取
+
+# 6. 等待审查完成
+openclaw browser wait --text "审查完成"
+
+# 7. 下载报告
+openclaw browser download <ref> report.docx
+```
 
 **目录结构**：
 ```
 contract-review/
-├── SKILL.md
-├── scripts/
-│   ├── compare_versions.py    # 版本对比
-│   └── extract_clauses.py     # 条款提取
+├── SKILL.md              # 技能说明和工作流程
 └── references/
-    ├── risk_checklist.md      # 风险检查清单
-    ├── clause_library.md      # 条款库
-    ├── review_template.md     # 审查报告模板
-    └── contract_types/
-        ├── sales_contract.md      # 买卖合同审查要点
-        ├── service_contract.md    # 服务合同审查要点
-        ├── lease_contract.md      # 租赁合同审查要点
-        └── employment_contract.md # 劳动合同审查要点
+    └── zhiexa_guide.md   # 智析合同使用指南
 ```
 
 **开发任务**：
 
 | 任务编号 | 任务描述 | 预计工时 | 依赖 |
 |---------|---------|---------|------|
-| CR-001 | 创建技能目录结构和 SKILL.md 模板 | 0.5h | 第一阶段完成 |
-| CR-002 | 编写风险检查清单（risk_checklist.md） | 2h | CR-001 |
-| CR-003 | 编写条款库（clause_library.md） | 3h | CR-001 |
-| CR-004 | 编写审查报告模板 | 1h | CR-001 |
-| CR-005 | 编写各类合同审查要点（4类） | 4h | CR-001 |
-| CR-006 | 实现 compare_versions.py | 2h | CR-001 |
-| CR-007 | 实现 extract_clauses.py | 2h | CR-001 |
-| CR-008 | 编写 SKILL.md 使用说明文档 | 1h | CR-002~CR-007 |
-| CR-009 | 本地测试和调试 | 1h | CR-008 |
-| CR-010 | 打包技能文件 | 0.5h | CR-009 |
+| CR-001 | 创建技能目录结构和 SKILL.md | 0.5h | 无 |
+| CR-002 | 分析智析合同网站页面结构 | 1h | CR-001 |
+| CR-003 | 编写浏览器自动化流程文档 | 1h | CR-002 |
+| CR-004 | 编写 SKILL.md 使用说明 | 0.5h | CR-003 |
+| CR-005 | 本地测试和调试 | 1h | CR-004 |
 
 **技术依赖**：
-- Python 3.10+
-- difflib（文本对比）
-- 第一阶段技能（doc-reader, doc-writer）
+- OpenClaw 内置 Browser 工具（已集成）
+- Playwright（OpenClaw 依赖）
 
 **环境变量**：无
+
+**注意事项**：
+1. 用户需要先在浏览器中登录智析合同账号
+2. OpenClaw 浏览器使用独立配置文件，需要单独登录
+3. 首次使用时需要引导用户登录
 
 ---
 
