@@ -152,8 +152,8 @@
   "advanced": {
     "title": "詳細設定",
     "description": "上級ユーザー向けオプション",
-    "devMode": "開発者モード",
-    "devModeDesc": "開発者ツールとショートカットを表示"
+    "devMode": "OpenClaw コンソール",
+    "devModeDesc": "詳細なログとデバッグ情報を表示する OpenClaw コンソールを有効にします。"
   },
   "developer": {
     "title": "開発者",

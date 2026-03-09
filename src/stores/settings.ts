@@ -34,6 +34,7 @@ interface SettingsState {
   // UI State
   sidebarCollapsed: boolean;
   devModeUnlocked: boolean;
+  openclawConsoleEnabled: boolean;
 
   // Skills & Marketplace
   skillMirror: 'official' | 'china' | 'custom';
@@ -61,6 +62,7 @@ interface SettingsState {
   setAutoDownloadUpdate: (value: boolean) => void;
   setSidebarCollapsed: (value: boolean) => void;
   setDevModeUnlocked: (value: boolean) => void;
+  setOpenclawConsoleEnabled: (value: boolean) => void;
   setSkillMirror: (mirror: 'official' | 'china' | 'custom') => void;
   setSkillCustomMirrorUrl: (url: string) => void;
   markSetupComplete: () => void;
@@ -90,6 +92,7 @@ const defaultSettings = {
   autoDownloadUpdate: false,
   sidebarCollapsed: false,
   devModeUnlocked: false,
+  openclawConsoleEnabled: false,
   skillMirror: 'official' as const,
   skillCustomMirrorUrl: '',
   setupComplete: false,
@@ -132,6 +135,10 @@ export const useSettingsStore = create<SettingsState>()(
       setDevModeUnlocked: (devModeUnlocked) => {
         set({ devModeUnlocked });
         void window.electron.ipcRenderer.invoke('settings:set', 'devModeUnlocked', devModeUnlocked).catch(() => {});
+      },
+      setOpenclawConsoleEnabled: (openclawConsoleEnabled) => {
+        set({ openclawConsoleEnabled });
+        void window.electron.ipcRenderer.invoke('settings:set', 'openclawConsoleEnabled', openclawConsoleEnabled).catch(() => {});
       },
       setSkillMirror: (mirror) => {
         set({ skillMirror: mirror });

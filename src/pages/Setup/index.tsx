@@ -988,7 +988,7 @@ function ProviderContent({
     await window.electron.ipcRenderer.invoke('provider:cancelOAuth');
   };
 
-  // On mount, try to restore previously configured provider
+  // On mount, try to restore previously configured provider, default to siliconflow
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -997,10 +997,17 @@ function ProviderContent({
         const defaultId = await window.electron.ipcRenderer.invoke('provider:getDefault') as string | null;
         const setupProviderTypes = new Set<string>(providers.map((p) => p.id));
         const setupCandidates = list.filter((p) => setupProviderTypes.has(p.type));
+        
+        // Default to siliconflow if no existing configuration
+        const siliconflowProvider = providers.find(p => p.id === 'siliconflow');
+        const siliconflowCandidate = setupCandidates.find(p => p.type === 'siliconflow');
+        
         const preferred =
           (defaultId && setupCandidates.find((p) => p.id === defaultId))
           || setupCandidates.find((p) => p.hasKey)
+          || siliconflowCandidate
           || setupCandidates[0];
+          
         if (preferred && !cancelled) {
           onSelectProvider(preferred.type);
           setSelectedProviderConfigId(preferred.id);
@@ -1011,12 +1018,24 @@ function ProviderContent({
           if (storedKey) {
             onApiKeyChange(storedKey);
           }
+        } else if (siliconflowProvider && !cancelled) {
+          // Default to siliconflow if no existing configuration
+          onSelectProvider('siliconflow');
+          setSelectedProviderConfigId(null);
+          onConfiguredChange(false);
         } else if (!cancelled) {
           onConfiguredChange(false);
         }
       } catch (error) {
         if (!cancelled) {
           console.error('Failed to load provider list:', error);
+          // Fallback to siliconflow on error
+          const siliconflowProvider = providers.find(p => p.id === 'siliconflow');
+          if (siliconflowProvider && !cancelled) {
+            onSelectProvider('siliconflow');
+            setSelectedProviderConfigId(null);
+            onConfiguredChange(false);
+          }
         }
       }
     })();
@@ -1395,6 +1414,29 @@ function ProviderContent({
                   {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              
+              {/* SiliconFlow specific buttons */}
+              {selectedProvider === 'siliconflow' && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.electron.ipcRenderer.invoke('shell:openExternal', 'https://cloud.siliconflow.cn/i/WFoChvZf')}
+                    className="flex-1"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    获取 API Key
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.electron.ipcRenderer.invoke('shell:openExternal', 'https://docs.siliconflow.cn/cn/userguide/quickstart')}
+                    className="flex-1"
+                  >
+                    查看教程
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

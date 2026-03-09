@@ -153,8 +153,8 @@
   "advanced": {
     "title": "Advanced",
     "description": "Power-user options",
-    "devMode": "Developer Mode",
-    "devModeDesc": "Enable advanced developer tools and debug options.",
+    "devMode": "OpenClaw Console",
+    "devModeDesc": "Enable OpenClaw console to view detailed logs and debug information.",
     "skillMirror": "Skill Marketplace Mirror",
     "skillMirrorDesc": "Choose a mirror for faster skill downloads and to avoid rate limit errors.",
     "mirrorOfficial": "Official (ClawHub.ai)",

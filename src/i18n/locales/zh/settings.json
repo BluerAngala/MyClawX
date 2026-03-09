@@ -153,8 +153,8 @@
   "advanced": {
     "title": "高级",
     "description": "高级选项",
-    "devMode": "开发者模式",
-    "devModeDesc": "启用高级开发者工具和调试选项。",
+    "devMode": "OpenClaw 控制台",
+    "devModeDesc": "启用 OpenClaw 控制台以查看详细日志和调试信息。",
     "skillMirror": "技能市场镜像源",
     "skillMirrorDesc": "选择国内加速镜像以解决 ClawHub.ai 访问频繁报错问题。",
     "mirrorOfficial": "官方源 (ClawHub.ai)",

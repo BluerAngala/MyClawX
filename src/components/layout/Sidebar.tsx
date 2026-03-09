@@ -28,6 +28,7 @@ import { useGatewayStore } from '@/stores/gateway';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { toast } from 'sonner';
 import {
   Tooltip,
   TooltipContent,
@@ -102,18 +103,46 @@ export function Sidebar() {
 
   const openDevConsole = async () => {
     try {
+      toast.info('正在打开 OpenClaw 控制台...');
+      
+      // 检查网关状态
+      const gatewayStatus = useGatewayStore.getState().status;
+      console.log('Current gateway status:', gatewayStatus);
+      
+      if (gatewayStatus.state !== 'running') {
+        console.warn('Gateway is not running, attempting to start it...');
+        toast.info('正在启动网关，请稍候...');
+        // 尝试启动网关
+        await startGateway();
+        // 等待一小段时间让网关启动
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      }
+      
       const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl') as {
         success: boolean;
         url?: string;
         error?: string;
       };
+      
+      console.log('Gateway Control UI URL result:', result);
+      
       if (result.success && result.url) {
-        window.electron.openExternal(result.url);
+        console.log('Opening Dev Console URL:', result.url);
+        await window.electron.openExternal(result.url);
+        console.log('Dev Console opened successfully');
+        toast.success('OpenClaw 控制台已打开');
       } else {
-        console.error('Failed to get Dev Console URL:', result.error);
-      }
+          console.error('Failed to get Dev Console URL:', result.error);
+          toast.error('打开控制台失败：' + (result.error || '未知错误'));
+          throw new Error(result.error || 'Unknown error getting Control UI URL');
+        }
     } catch (err) {
       console.error('Error opening Dev Console:', err);
+      const errorMsg = String(err);
+      if (!errorMsg.includes('控制台不可用')) {
+        toast.error('打开控制台失败：' + errorMsg);
+      }
+      throw err;
     }
   };
 
@@ -307,7 +336,7 @@ const navItems = [
           </Tooltip>
         </TooltipProvider>
 
-        {devModeUnlocked && !sidebarCollapsed && (
+        {devModeUnlocked && (
           <Button
             variant="ghost"
             size="sm"
@@ -315,8 +344,10 @@ const navItems = [
             onClick={openDevConsole}
           >
             <Terminal className="h-4 w-4 mr-2" />
-            <span className="text-xs truncate">{t('sidebar.devConsole')}</span>
-            <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+            {!sidebarCollapsed && (
+              <span className="text-xs truncate">{t('sidebar.devConsole')}</span>
+            )}
+            {!sidebarCollapsed && <ExternalLink className="h-3 w-3 ml-auto opacity-50" />}
           </Button>
         )}
 
