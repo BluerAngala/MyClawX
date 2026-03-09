@@ -3,10 +3,12 @@
  * Registers all IPC handlers for main-renderer communication
  */
 import { ipcMain, BrowserWindow, shell, dialog, app, nativeImage } from 'electron';
-import { existsSync, cpSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, cpSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, extname, basename } from 'node:path';
 import crypto from 'node:crypto';
+import * as mammoth from 'mammoth';
+import { PDFParse } from 'pdf-parse';
 import { GatewayManager } from '../gateway/manager';
 import { ClawHubService, ClawHubSearchParams, ClawHubInstallParams, ClawHubUninstallParams } from '../gateway/clawhub';
 import {
@@ -636,6 +638,7 @@ function registerGatewayHandlers(
       // We use BOTH paths for maximum reliability.
       const imageAttachments: Array<Record<string, unknown>> = [];
       const fileReferences: string[] = [];
+      const extractedContexts: string[] = [];
 
       if (params.media && params.media.length > 0) {
         const fsP = await import('fs/promises');
@@ -647,6 +650,12 @@ function registerGatewayHandlers(
           fileReferences.push(
             `[media attached: ${m.filePath} (${m.mimeType}) | ${m.filePath}]`,
           );
+
+          // Extract text for documents (smart enhancement)
+          const text = await extractTextFromFile(m.filePath, m.mimeType);
+          if (text && text.trim()) {
+            extractedContexts.push(`--- CONTENT OF ${m.fileName} ---\n${text.trim()}\n--- END OF ${m.fileName} ---`);
+          }
 
           if (VISION_MIME_TYPES.has(m.mimeType)) {
             // Send as base64 attachment in the format the Gateway expects:
@@ -668,6 +677,12 @@ function registerGatewayHandlers(
       if (fileReferences.length > 0) {
         const refs = fileReferences.join('\n');
         message = message ? `${message}\n\n${refs}` : refs;
+      }
+
+      // Append extracted text content as hidden context for the AI
+      if (extractedContexts.length > 0) {
+        const contexts = extractedContexts.join('\n\n');
+        message = message ? `${message}\n\n<context>\n${contexts}\n</context>` : `<context>\n${contexts}\n</context>`;
       }
 
       const rpcParams: Record<string, unknown> = {
@@ -2094,6 +2109,32 @@ async function generateImagePreview(filePath: string, mimeType: string): Promise
     const buf = await readFileAsync(filePath);
     return `data:${mimeType};base64,${buf.toString('base64')}`;
   } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract text from .docx or .pdf files.
+ */
+async function extractTextFromFile(filePath: string, mimeType: string): Promise<string | null> {
+  try {
+    if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      const result = await mammoth.extractRawText({ path: filePath });
+      return result.value;
+    }
+    if (mimeType === 'application/pdf') {
+      const dataBuffer = readFileSync(filePath);
+      const parser = new PDFParse({ data: dataBuffer });
+      const data = await parser.getText();
+      await parser.destroy();
+      return data.text;
+    }
+    if (mimeType.startsWith('text/') || mimeType === 'application/json' || mimeType === 'application/xml') {
+      return readFileSync(filePath, 'utf-8');
+    }
+    return null;
+  } catch (err) {
+    logger.warn(`[extractTextFromFile] Failed to extract text from ${filePath}:`, err);
     return null;
   }
 }
