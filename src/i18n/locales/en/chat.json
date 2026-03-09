@@ -16,5 +16,18 @@
         "refresh": "Refresh chat",
         "showThinking": "Show thinking",
         "hideThinking": "Hide thinking"
+    },
+    "messageActions": {
+        "copy": "Copy",
+        "copied": "Copied",
+        "edit": "Edit",
+        "delete": "Delete",
+        "regenerate": "Regenerate",
+        "deleteConfirm": "Are you sure you want to delete this message?"
+    },
+    "messageEdit": {
+        "placeholder": "Edit message content...",
+        "cancel": "Cancel",
+        "save": "Save & Send"
     }
 }

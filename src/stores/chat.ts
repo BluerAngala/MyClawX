@@ -107,6 +107,9 @@ interface ChatState {
   toggleThinking: () => void;
   refresh: () => Promise<void>;
   clearError: () => void;
+  editMessage: (messageId: string, newContent: string) => Promise<void>;
+  deleteMessage: (messageId: string) => void;
+  regenerateMessage: (messageId: string) => Promise<void>;
 }
 
 // Module-level timestamp tracking the last chat event received.
@@ -1807,4 +1810,185 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  editMessage: async (messageId: string, newContent: string) => {
+    const { messages, currentSessionKey } = get();
+    const msgIndex = messages.findIndex((m) => m.id === messageId);
+    if (msgIndex === -1) return;
+
+    const msg = messages[msgIndex];
+    if (msg.role !== 'user') return;
+
+    const trimmedContent = newContent.trim();
+    if (!trimmedContent) return;
+
+    const updatedMessages = messages.slice(0, msgIndex + 1).map((m, idx) => {
+      if (idx === msgIndex) {
+        return {
+          ...m,
+          content: trimmedContent,
+          timestamp: Date.now() / 1000,
+        };
+      }
+      return m;
+    });
+
+    set({
+      messages: updatedMessages,
+      sending: true,
+      error: null,
+      streamingText: '',
+      streamingMessage: null,
+      streamingTools: [],
+      pendingFinal: false,
+      lastUserMessageAt: Date.now(),
+    });
+
+    const nowMs = Date.now();
+    set((s) => ({ sessionLastActivity: { ...s.sessionLastActivity, [currentSessionKey]: nowMs } }));
+
+    _lastChatEventAt = Date.now();
+    clearHistoryPoll();
+    clearErrorRecoveryTimer();
+
+    const POLL_START_DELAY = 3_000;
+    const POLL_INTERVAL = 4_000;
+    const pollHistory = () => {
+      const state = get();
+      if (!state.sending) { clearHistoryPoll(); return; }
+      if (state.streamingMessage) {
+        _historyPollTimer = setTimeout(pollHistory, POLL_INTERVAL);
+        return;
+      }
+      state.loadHistory(true);
+      _historyPollTimer = setTimeout(pollHistory, POLL_INTERVAL);
+    };
+    _historyPollTimer = setTimeout(pollHistory, POLL_START_DELAY);
+
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      const CHAT_SEND_TIMEOUT_MS = 120_000;
+
+      const result = await window.electron.ipcRenderer.invoke(
+        'gateway:rpc',
+        'chat.send',
+        {
+          sessionKey: currentSessionKey,
+          message: trimmedContent,
+          deliver: false,
+          idempotencyKey,
+        },
+        CHAT_SEND_TIMEOUT_MS,
+      ) as { success: boolean; result?: { runId?: string }; error?: string };
+
+      if (!result.success) {
+        clearHistoryPoll();
+        set({ error: result.error || 'Failed to edit message', sending: false });
+      } else if (result.result?.runId) {
+        set({ activeRunId: result.result.runId });
+      }
+    } catch (err) {
+      clearHistoryPoll();
+      set({ error: String(err), sending: false });
+    }
+  },
+
+  deleteMessage: (messageId: string) => {
+    const { messages } = get();
+    const msgIndex = messages.findIndex((m) => m.id === messageId);
+    if (msgIndex === -1) return;
+
+    const msg = messages[msgIndex];
+    if (msgIndex === messages.length - 1 && msg.role === 'assistant') {
+      set({ messages: messages.slice(0, -1) });
+      return;
+    }
+
+    if (msg.role === 'user') {
+      const nextUserIndex = messages.findIndex((m, idx) => idx > msgIndex && m.role === 'user');
+      const deleteUntilIndex = nextUserIndex === -1 ? messages.length : nextUserIndex;
+      set({ messages: messages.slice(0, msgIndex).concat(messages.slice(deleteUntilIndex)) });
+      return;
+    }
+
+    set({ messages: messages.filter((m) => m.id !== messageId) });
+  },
+
+  regenerateMessage: async (messageId: string) => {
+    const { messages, currentSessionKey } = get();
+    const msgIndex = messages.findIndex((m) => m.id === messageId);
+    if (msgIndex === -1) return;
+
+    const msg = messages[msgIndex];
+    if (msg.role !== 'assistant') return;
+
+    const prevUserMsgIndex = messages.slice(0, msgIndex).reverse().findIndex((m) => m.role === 'user');
+    if (prevUserMsgIndex === -1) return;
+
+    const actualUserIndex = msgIndex - 1 - prevUserMsgIndex;
+    const userMsg = messages[actualUserIndex];
+    const userText = getMessageText(userMsg.content);
+
+    if (!userText.trim()) return;
+
+    const truncatedMessages = messages.slice(0, msgIndex);
+    set({
+      messages: truncatedMessages,
+      sending: true,
+      error: null,
+      streamingText: '',
+      streamingMessage: null,
+      streamingTools: [],
+      pendingFinal: false,
+      lastUserMessageAt: Date.now(),
+    });
+
+    const nowMs = Date.now();
+    set((s) => ({ sessionLastActivity: { ...s.sessionLastActivity, [currentSessionKey]: nowMs } }));
+
+    _lastChatEventAt = Date.now();
+    clearHistoryPoll();
+    clearErrorRecoveryTimer();
+
+    const POLL_START_DELAY = 3_000;
+    const POLL_INTERVAL = 4_000;
+    const pollHistory = () => {
+      const state = get();
+      if (!state.sending) { clearHistoryPoll(); return; }
+      if (state.streamingMessage) {
+        _historyPollTimer = setTimeout(pollHistory, POLL_INTERVAL);
+        return;
+      }
+      state.loadHistory(true);
+      _historyPollTimer = setTimeout(pollHistory, POLL_INTERVAL);
+    };
+    _historyPollTimer = setTimeout(pollHistory, POLL_START_DELAY);
+
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      const CHAT_SEND_TIMEOUT_MS = 120_000;
+
+      const result = await window.electron.ipcRenderer.invoke(
+        'gateway:rpc',
+        'chat.send',
+        {
+          sessionKey: currentSessionKey,
+          message: userText,
+          deliver: false,
+          idempotencyKey,
+        },
+        CHAT_SEND_TIMEOUT_MS,
+      ) as { success: boolean; result?: { runId?: string }; error?: string };
+
+      if (!result.success) {
+        clearHistoryPoll();
+        set({ error: result.error || 'Failed to regenerate message', sending: false });
+      } else if (result.result?.runId) {
+        set({ activeRunId: result.result.runId });
+      }
+    } catch (err) {
+      clearHistoryPoll();
+      set({ error: String(err), sending: false });
+    }
+  },
 }));

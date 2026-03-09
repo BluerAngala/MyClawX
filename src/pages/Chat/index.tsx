@@ -41,6 +41,9 @@ export function Chat() {
   const sendMessage = useChatStore((s) => s.sendMessage);
   const abortRun = useChatStore((s) => s.abortRun);
   const clearError = useChatStore((s) => s.clearError);
+  const editMessage = useChatStore((s) => s.editMessage);
+  const deleteMessage = useChatStore((s) => s.deleteMessage);
+  const regenerateMessage = useChatStore((s) => s.regenerateMessage);
   const restartGateway = useGatewayStore((s) => s.restart);
   const startGateway = useGatewayStore((s) => s.start);
 
@@ -205,6 +208,10 @@ export function Chat() {
                   key={msg.id || `msg-${idx}`}
                   message={msg}
                   showThinking={showThinking}
+                  isLastMessage={idx === messages.length - 1}
+                  onEdit={editMessage}
+                  onDelete={deleteMessage}
+                  onRegenerate={regenerateMessage}
                 />
               ))}
 

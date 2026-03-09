@@ -1,10 +1,10 @@
 /**
  * Chat Message Component
  * Renders user / assistant / system / toolresult messages
- * with markdown, thinking sections, images, and tool cards.
+ * with markdown, thinking sections, images, tool cards, and message actions.
  */
 import { useState, useCallback, useEffect, memo } from 'react';
-import { User, Sparkles, Copy, Check, ChevronDown, ChevronRight, Wrench, FileText, Film, Music, FileArchive, File, X, FolderOpen, ZoomIn, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, Sparkles, ChevronDown, ChevronRight, Wrench, FileText, Film, Music, FileArchive, File, X, FolderOpen, ZoomIn, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { createPortal } from 'react-dom';
@@ -12,11 +12,14 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { RawMessage, AttachedFileMeta } from '@/stores/chat';
 import { extractText, extractThinking, extractImages, extractToolUse, formatTimestamp } from './message-utils';
+import { MessageActions } from './MessageActions';
+import { MessageEditInput } from './MessageEditInput';
 
 interface ChatMessageProps {
   message: RawMessage;
   showThinking: boolean;
   isStreaming?: boolean;
+  isLastMessage?: boolean;
   streamingTools?: Array<{
     id?: string;
     toolCallId?: string;
@@ -25,6 +28,9 @@ interface ChatMessageProps {
     durationMs?: number;
     summary?: string;
   }>;
+  onEdit?: (messageId: string, newContent: string) => void;
+  onDelete?: (messageId: string) => void;
+  onRegenerate?: (messageId: string) => void;
 }
 
 interface ExtractedImage { url?: string; data?: string; mimeType: string; }
@@ -40,7 +46,11 @@ export const ChatMessage = memo(function ChatMessage({
   message,
   showThinking,
   isStreaming = false,
+  isLastMessage = false,
   streamingTools = [],
+  onEdit,
+  onDelete,
+  onRegenerate,
 }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const role = typeof message.role === 'string' ? message.role.toLowerCase() : '';
@@ -55,6 +65,34 @@ export const ChatMessage = memo(function ChatMessage({
 
   const attachedFiles = message._attachedFiles || [];
   const [lightboxImg, setLightboxImg] = useState<{ src: string; fileName: string; filePath?: string; base64?: string; mimeType?: string } | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleEdit = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  const handleEditSave = useCallback((newContent: string) => {
+    setIsEditing(false);
+    if (onEdit && message.id) {
+      onEdit(message.id, newContent);
+    }
+  }, [onEdit, message.id]);
+
+  const handleEditCancel = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleDelete = useCallback(() => {
+    if (onDelete && message.id) {
+      onDelete(message.id);
+    }
+  }, [onDelete, message.id]);
+
+  const handleRegenerate = useCallback(() => {
+    if (onRegenerate && message.id) {
+      onRegenerate(message.id);
+    }
+  }, [onRegenerate, message.id]);
 
   // Never render tool result messages in chat UI
   if (isToolResult) return null;
@@ -159,11 +197,21 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Main text bubble */}
-        {hasText && (
+        {/* Main text bubble or edit input */}
+        {hasText && !isEditing && (
           <MessageBubble
             text={text}
             isUser={isUser}
+            isStreaming={isStreaming}
+          />
+        )}
+
+        {/* Edit mode for user messages */}
+        {isEditing && isUser && (
+          <MessageEditInput
+            initialText={text}
+            onSave={handleEditSave}
+            onCancel={handleEditCancel}
             isStreaming={isStreaming}
           />
         )}
@@ -218,16 +266,38 @@ export const ChatMessage = memo(function ChatMessage({
           </div>
         )}
 
-        {/* Hover row for user messages — timestamp only */}
-        {isUser && message.timestamp && (
-          <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity duration-200 select-none">
-            {formatTimestamp(message.timestamp)}
-          </span>
+        {/* Hover row for user messages — timestamp + actions */}
+        {isUser && !isEditing && hasText && (
+          <div className={cn('flex items-center gap-2 w-full', 'flex-row-reverse')}>
+            <span className="text-xs text-muted-foreground select-none">
+              {message.timestamp ? formatTimestamp(message.timestamp) : ''}
+            </span>
+            <MessageActions
+              role={message.role as 'user' | 'assistant'}
+              text={text}
+              isLastMessage={isLastMessage}
+              isStreaming={isStreaming}
+              onEdit={onEdit ? handleEdit : undefined}
+              onDelete={onDelete ? handleDelete : undefined}
+            />
+          </div>
         )}
 
-        {/* Hover row for assistant messages — only when there is real text content */}
+        {/* Hover row for assistant messages — actions + timestamp */}
         {!isUser && hasText && (
-          <AssistantHoverBar text={text} timestamp={message.timestamp} />
+          <div className="flex items-center gap-2 w-full">
+            <MessageActions
+              role={message.role as 'user' | 'assistant'}
+              text={text}
+              isLastMessage={isLastMessage}
+              isStreaming={isStreaming}
+              onRegenerate={onRegenerate && isLastMessage ? handleRegenerate : undefined}
+              onDelete={onDelete ? handleDelete : undefined}
+            />
+            <span className="text-xs text-muted-foreground select-none">
+              {message.timestamp ? formatTimestamp(message.timestamp) : ''}
+            </span>
+          </div>
         )}
       </div>
 
@@ -292,34 +362,6 @@ function ToolStatusBar({
           </div>
         );
       })}
-    </div>
-  );
-}
-
-// ── Assistant hover bar (timestamp + copy, shown on group hover) ─
-
-function AssistantHoverBar({ text, timestamp }: { text: string; timestamp?: number }) {
-  const [copied, setCopied] = useState(false);
-
-  const copyContent = useCallback(() => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [text]);
-
-  return (
-    <div className="flex items-center justify-between w-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 select-none px-1">
-      <span className="text-xs text-muted-foreground">
-        {timestamp ? formatTimestamp(timestamp) : ''}
-      </span>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6"
-        onClick={copyContent}
-      >
-        {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-      </Button>
     </div>
   );
 }
