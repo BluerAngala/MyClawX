@@ -2,6 +2,9 @@
     "gatewayRequired": "The OpenClaw Gateway needs to be running to use chat. It will start automatically, or you can start it from Settings.",
     "inputPlaceholder": "Type a message (Enter to send, Shift+Enter for new line)",
     "inputPlaceholderDisabled": "Gateway not connected...",
+    "developer": {
+        "tokenCopied": "Gateway token copied"
+    },
     "welcome": {
         "title": "MyClawX Chat",
         "subtitle": "Your AI assistant is ready. Start a conversation below.",

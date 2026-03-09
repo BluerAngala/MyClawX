@@ -643,10 +643,47 @@ export async function syncGatewayTokenToConfig(token: string): Promise<void> {
   auth.token = token;
   gateway.auth = auth;
   if (!gateway.mode) gateway.mode = 'local';
+
+  const controlUi = (
+    gateway.controlUi && typeof gateway.controlUi === 'object'
+      ? { ...(gateway.controlUi as Record<string, unknown>) }
+      : {}
+  ) as Record<string, unknown>;
+  controlUi.enabled = true;
+  gateway.controlUi = controlUi;
+
   config.gateway = gateway;
 
   await writeOpenClawJson(config);
   console.log('Synced gateway token to openclaw.json');
+}
+
+/**
+ * Get the configured gateway port from ~/.openclaw/openclaw.json.
+ * Returns undefined if not configured.
+ */
+export async function getOpenClawGatewayPort(): Promise<number | undefined> {
+  const config = await readOpenClawJson();
+  const gateway = config.gateway as Record<string, unknown> | undefined;
+  if (gateway && typeof gateway.port === 'number') {
+    return gateway.port;
+  }
+  return undefined;
+}
+
+/**
+ * Get the gateway token from ~/.openclaw/openclaw.json.
+ * This is the token used by an existing Gateway (e.g., started by Cherry Studio).
+ * Returns undefined if no token is configured.
+ */
+export async function getOpenClawGatewayToken(): Promise<string | undefined> {
+  const config = await readOpenClawJson();
+  const gateway = config.gateway as Record<string, unknown> | undefined;
+  const auth = gateway?.auth as Record<string, unknown> | undefined;
+  if (auth && typeof auth.token === 'string') {
+    return auth.token;
+  }
+  return undefined;
 }
 
 /**

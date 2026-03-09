@@ -251,11 +251,6 @@ export class GatewayManager extends EventEmitter {
     return sanitized;
   }
 
-  private formatExit(code: number | null, signal: NodeJS.Signals | null): string {
-    if (code !== null) return `code=${code}`;
-    if (signal) return `signal=${signal}`;
-    return 'code=null signal=null';
-  }
 
   private classifyStderrMessage(message: string): { level: 'drop' | 'debug' | 'warn'; normalized: string } {
     const msg = message.trim();
@@ -426,12 +421,25 @@ export class GatewayManager extends EventEmitter {
           this.assertLifecycleEpoch(startEpoch, 'start/find-existing');
           if (existing) {
             logger.debug(`Found existing Gateway on port ${existing.port}`);
-            await this.connect(existing.port, existing.externalToken);
-            this.assertLifecycleEpoch(startEpoch, 'start/connect-existing');
-            this.ownsProcess = false;
-            this.setStatus({ pid: undefined });
-            this.startHealthCheck();
-            return;
+            try {
+              await this.connect(existing.port, existing.externalToken);
+              this.assertLifecycleEpoch(startEpoch, 'start/connect-existing');
+              this.ownsProcess = false;
+              this.setStatus({ pid: undefined });
+              this.startHealthCheck();
+              return;
+            } catch (connectError) {
+              // If connection failed due to token mismatch, kill the existing process
+              // and start a new one with the correct token
+              const errMsg = String(connectError);
+              if (errMsg.includes('token mismatch') || errMsg.includes('unauthorized')) {
+                logger.warn(`Existing Gateway has different token, restarting...`);
+                await this.killExistingGateway(existing.port);
+                // Continue to start new process below
+              } else {
+                throw connectError;
+              }
+            }
           }
 
           logger.debug('No existing Gateway found, starting new process...');
@@ -920,6 +928,73 @@ export class GatewayManager extends EventEmitter {
     }
 
     return null;
+  }
+
+  /**
+   * Kill existing Gateway process on the specified port.
+   * Used when token mismatch is detected.
+   */
+  private async killExistingGateway(port: number): Promise<void> {
+    logger.info(`Killing existing Gateway on port ${port}...`);
+    try {
+      const cmd = process.platform === 'win32'
+        ? `netstat -ano | findstr :${port}`
+        : `lsof -i :${port} -sTCP:LISTEN -t`;
+
+      const { stdout } = await new Promise<{ stdout: string }>((resolve, reject) => {
+        import('child_process').then(cp => {
+          cp.exec(cmd, { timeout: 5000, windowsHide: true }, (err, stdout) => {
+            if (err) resolve({ stdout: '' });
+            else resolve({ stdout });
+          });
+        }).catch(reject);
+      });
+
+      if (stdout.trim()) {
+        let pids: string[] = [];
+        if (process.platform === 'win32') {
+          const lines = stdout.trim().split(/\r?\n/);
+          for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length >= 5 && parts[3] === 'LISTENING') {
+              pids.push(parts[4]);
+            }
+          }
+        } else {
+          pids = stdout.trim().split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        }
+        pids = [...new Set(pids)];
+
+        if (pids.length > 0) {
+          for (const pid of pids) {
+            try {
+              if (process.platform === 'win32') {
+                import('child_process').then(cp => {
+                  cp.exec(
+                    `taskkill /F /PID ${pid} /T`,
+                    { timeout: 5000, windowsHide: true },
+                    () => { }
+                  );
+                }).catch(() => { });
+              } else {
+                process.kill(parseInt(pid), 'SIGTERM');
+              }
+            } catch { /* ignore */ }
+          }
+          await new Promise(r => setTimeout(r, process.platform === 'win32' ? 2000 : 3000));
+
+          if (process.platform !== 'win32') {
+            for (const pid of pids) {
+              try { process.kill(parseInt(pid), 0); process.kill(parseInt(pid), 'SIGKILL'); } catch { /* already exited */ }
+            }
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        }
+      }
+      logger.info(`Existing Gateway on port ${port} killed`);
+    } catch (err) {
+      logger.warn(`Failed to kill existing Gateway on port ${port}:`, err);
+    }
   }
 
   /**

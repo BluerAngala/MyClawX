@@ -35,6 +35,8 @@ import {
   setOpenClawDefaultModelWithOverride,
   syncProviderConfigToOpenClaw,
   updateAgentModelProvider,
+  getOpenClawGatewayPort,
+  getOpenClawGatewayToken,
 } from '../utils/openclaw-auth';
 import { logger } from '../utils/logger';
 import {
@@ -710,14 +712,89 @@ function registerGatewayHandlers(
   });
 
   // Get the Control UI URL with token for embedding
-  ipcMain.handle('gateway:getControlUiUrl', async () => {
+  ipcMain.handle('gateway:getControlUiUrl', async (_, sessionKey?: string) => {
     try {
-      const status = gatewayManager.getStatus();
-      const token = await getSetting('gatewayToken');
-      const port = status.port || 18789;
-      // Pass token as query param - Control UI will store it in localStorage
-      const url = `http://127.0.0.1:${port}/?token=${encodeURIComponent(token)}`;
-      return { success: true, url, port, token };
+      // Priority 0: Try to use token from openclaw.json (for existing Gateway like Cherry Studio)
+      const existingToken = await getOpenClawGatewayToken();
+      const myclawxToken = await getSetting('gatewayToken');
+      
+      // Use existing token if available, otherwise fall back to MyClawX's token
+      const token = existingToken || myclawxToken;
+      
+      if (existingToken) {
+        logger.info(`[getControlUiUrl] Using token from openclaw.json (existing Gateway)`);
+      } else {
+        logger.info(`[getControlUiUrl] Using MyClawX generated token`);
+      }
+
+      // Priority 1: Use the Gateway that MyClawX is actually connected to
+      const myclawxStatus = gatewayManager.getStatus();
+      logger.info(`[getControlUiUrl] MyClawX Gateway status: state=${myclawxStatus.state}, port=${myclawxStatus.port}, session=${sessionKey}`);
+      
+      if (myclawxStatus.state === 'running' && myclawxStatus.port) {
+        try {
+          const http = await import('http');
+          const isRunning = await new Promise<boolean>((resolve) => {
+            const req = http.get(`http://127.0.0.1:${myclawxStatus.port}/`, { timeout: 2000 }, (res) => {
+              logger.info(`[getControlUiUrl] HTTP check on port ${myclawxStatus.port}: status=${res.statusCode}`);
+              resolve(res.statusCode === 200 || res.statusCode === 302);
+            });
+            req.on('error', (err) => {
+              logger.warn(`[getControlUiUrl] HTTP check on port ${myclawxStatus.port} failed:`, err.message);
+              resolve(false);
+            });
+            req.on('timeout', () => { 
+              logger.warn(`[getControlUiUrl] HTTP check on port ${myclawxStatus.port} timed out`);
+              req.destroy(); 
+              resolve(false); 
+            });
+          });
+
+          if (isRunning) {
+            logger.info(`Using MyClawX connected Gateway on port ${myclawxStatus.port}`);
+            // Build URL with session if provided
+            let url = `http://127.0.0.1:${myclawxStatus.port}/?token=${encodeURIComponent(token)}`;
+            if (sessionKey) {
+              url += `&session=${encodeURIComponent(sessionKey)}`;
+            }
+            return { success: true, url, port: myclawxStatus.port, token };
+          }
+          logger.warn(`[getControlUiUrl] MyClawX Gateway on port ${myclawxStatus.port} is not responding to HTTP, falling back to port detection`);
+        } catch (err) {
+          logger.warn(`[getControlUiUrl] Error checking MyClawX Gateway:`, err);
+          // Fall through to port detection
+        }
+      }
+
+      // Priority 2: Detect running Gateway on known ports
+      const configuredPort = await getOpenClawGatewayPort();
+      const portsToCheck = configuredPort ? [configuredPort, 18789, 18790] : [18789, 18790];
+
+      for (const checkPort of portsToCheck) {
+        try {
+          const http = await import('http');
+          const isRunning = await new Promise<boolean>((resolve) => {
+            const req = http.get(`http://127.0.0.1:${checkPort}/`, { timeout: 2000 }, (res) => {
+              resolve(res.statusCode === 200 || res.statusCode === 302);
+            });
+            req.on('error', () => resolve(false));
+            req.on('timeout', () => { req.destroy(); resolve(false); });
+          });
+
+          if (isRunning) {
+            logger.info(`Found running OpenClaw Gateway on port ${checkPort}`);
+            let url = `http://127.0.0.1:${checkPort}/?token=${encodeURIComponent(token)}`;
+            if (sessionKey) {
+              url += `&session=${encodeURIComponent(sessionKey)}`;
+            }
+            return { success: true, url, port: checkPort, token };
+          }
+        } catch {
+          // Continue to next port
+        }
+      }
+
+      return { success: false, error: 'No running Gateway found. Please start the Gateway first.' };
     } catch (error) {
       return { success: false, error: String(error) };
     }

@@ -118,7 +118,11 @@ export function Sidebar() {
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
       
-      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl') as {
+      // Get current session key to pass to Control UI
+      const currentSession = useChatStore.getState().currentSessionKey;
+      console.log('Current session for Control UI:', currentSession);
+      
+      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl', currentSession) as {
         success: boolean;
         url?: string;
         error?: string;

@@ -117,7 +117,11 @@ export function Settings() {
 
   const openDevConsole = async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl') as {
+      // Get current session key from chat store
+      const chatStore = (await import('@/stores/chat')).useChatStore.getState();
+      const currentSession = chatStore.currentSessionKey;
+      
+      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl', currentSession) as {
         success: boolean;
         url?: string;
         token?: string;
@@ -137,7 +141,11 @@ export function Settings() {
 
   const refreshControlUiInfo = async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl') as {
+      // Get current session key from chat store
+      const chatStore = (await import('@/stores/chat')).useChatStore.getState();
+      const currentSession = chatStore.currentSessionKey;
+      
+      const result = await window.electron.ipcRenderer.invoke('gateway:getControlUiUrl', currentSession) as {
         success: boolean;
         url?: string;
         token?: string;
@@ -580,7 +588,7 @@ export function Settings() {
                 </div>
                 <Select
                   value={skillMirror}
-                  onChange={(e) => setSkillMirror(e.target.value as any)}
+                  onChange={(e) => setSkillMirror(e.target.value as 'official' | 'china' | 'custom')}
                   className="w-[180px]"
                 >
                   <option value="official">{t('advanced.mirrorOfficial')}</option>
